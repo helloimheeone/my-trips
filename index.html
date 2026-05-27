@@ -435,18 +435,55 @@ body {
   font-size: 14px;
   color: var(--muted);
   text-decoration: none;
-  padding: 14px 12px;
+  padding: 14px 10px;
   border-bottom: 1px solid transparent;
   margin-bottom: -1px;
   white-space: nowrap;
   transition: all 0.15s;
-  min-width: 70px;
+  min-width: 64px;
 }
 .trip-tab-item:hover { color: var(--text); }
 .trip-tab-item.active {
   color: var(--text);
   border-bottom-color: var(--text);
 }
+
+@media (max-width: 480px) {
+  .trip-tab-item { font-size: 13px; padding: 12px 6px; min-width: 56px; }
+}
+
+/* ====== Sub Nav (segmented control) ====== */
+.sub-nav {
+  display: inline-flex;
+  background: var(--rest-bg);
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 3px;
+  margin-bottom: 24px;
+  gap: 2px;
+}
+.sub-nav-item {
+  background: none;
+  border: none;
+  padding: 7px 16px;
+  border-radius: 18px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.sub-nav-item:hover { color: var(--text); }
+.sub-nav-item.active {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.sub-content { display: none; }
+.sub-content.active { display: block; }
 
 /* ====== Trip Content ====== */
 .trip-content {
@@ -1833,15 +1870,26 @@ a.dir-item-arrow:hover { color: var(--text); }
 
     <div class="trip-content">
       <section class="trip-tab-content active" data-tab="map">
-        <div class="map-empty" id="mapEmpty" style="display:none">
-          <p>아직 좌표가 있는 장소가 없어요.</p>
-          <p class="muted">Plan 탭에서 이벤트에 구글맵 URL을 추가하면 핀이 표시돼요.</p>
+        <div class="sub-nav" data-parent="map">
+          <button type="button" class="sub-nav-item active" data-sub="view">지도</button>
+          <button type="button" class="sub-nav-item" data-sub="places">장소</button>
         </div>
-        <div class="map-frame">
-          <div id="leafletMap"></div>
-          <button class="map-locate-btn map-hotel-btn" id="hotelBtn" title="호텔 위치" style="display:none">🏨</button>
-          <button class="map-locate-btn" id="locateBtn" title="내 위치">📍</button>
-          <div class="map-legend" id="mapLegend"></div>
+
+        <div class="sub-content active" data-sub="view">
+          <div class="map-empty" id="mapEmpty" style="display:none">
+            <p>아직 좌표가 있는 장소가 없어요.</p>
+            <p class="muted">Plan 탭에서 이벤트에 구글맵 URL을 추가하면 핀이 표시돼요.</p>
+          </div>
+          <div class="map-frame">
+            <div id="leafletMap"></div>
+            <button class="map-locate-btn map-hotel-btn" id="hotelBtn" title="호텔 위치" style="display:none">🏨</button>
+            <button class="map-locate-btn" id="locateBtn" title="내 위치">📍</button>
+            <div class="map-legend" id="mapLegend"></div>
+          </div>
+        </div>
+
+        <div class="sub-content" data-sub="places">
+          <div id="placesContainer"></div>
         </div>
       </section>
 
@@ -1907,45 +1955,47 @@ a.dir-item-arrow:hover { color: var(--text); }
       </section>
 
       <section class="trip-tab-content" data-tab="notes">
-        <div class="section-label">translate</div>
-        <h2 class="section-title">say it</h2>
+        <div class="sub-nav" data-parent="notes">
+          <button type="button" class="sub-nav-item active" data-sub="translate">번역기</button>
+          <button type="button" class="sub-nav-item" data-sub="phrases">표현</button>
+          <button type="button" class="sub-nav-item" data-sub="tips">노트</button>
+        </div>
 
-        <div class="translate-box">
-          <div class="lang-bar">
-            <select id="srcLang" class="lang-select"></select>
-            <button class="lang-swap" id="langSwap" type="button" aria-label="swap">⇄</button>
-            <select id="tgtLang" class="lang-select"></select>
-          </div>
-          <div class="translate-io">
-            <textarea id="trInput" class="translate-input" placeholder="번역할 문장을 입력하거나 🎤 눌러 말하기" rows="2"></textarea>
-            <div class="translate-toolbar">
-              <button class="tr-btn" id="trMicBtn" type="button" title="음성 입력">🎤</button>
-              <button class="tr-btn" id="trClearBtn" type="button" title="지우기">✕</button>
-              <button class="tr-btn primary" id="trGoBtn" type="button">번역</button>
+        <div class="sub-content active" data-sub="translate">
+          <div class="section-label">translate</div>
+          <h2 class="section-title">say it</h2>
+
+          <div class="translate-box">
+            <div class="lang-bar">
+              <select id="srcLang" class="lang-select"></select>
+              <button class="lang-swap" id="langSwap" type="button" aria-label="swap">⇄</button>
+              <select id="tgtLang" class="lang-select"></select>
             </div>
-          </div>
-          <div class="translate-output" id="trOutput">
-            <div class="tr-placeholder">결과가 여기에 나타나요</div>
-          </div>
-          <div class="translate-tools">
-            <button class="tr-link" id="openGoogleCam" type="button">📷 카메라로 번역 (구글 번역 열기)</button>
-            <button class="tr-link" id="openGoogleFull" type="button">↗ 구글 번역에서 열기</button>
+            <div class="translate-io">
+              <textarea id="trInput" class="translate-input" placeholder="번역할 문장을 입력하거나 🎤 눌러 말하기" rows="2"></textarea>
+              <div class="translate-toolbar">
+                <button class="tr-btn" id="trMicBtn" type="button" title="음성 입력">🎤</button>
+                <button class="tr-btn" id="trClearBtn" type="button" title="지우기">✕</button>
+                <button class="tr-btn primary" id="trGoBtn" type="button">번역</button>
+              </div>
+            </div>
+            <div class="translate-output" id="trOutput">
+              <div class="tr-placeholder">결과가 여기에 나타나요</div>
+            </div>
+            <div class="translate-tools">
+              <button class="tr-link" id="openGoogleCam" type="button">📷 카메라로 번역 (구글 번역 열기)</button>
+              <button class="tr-link" id="openGoogleFull" type="button">↗ 구글 번역에서 열기</button>
+            </div>
           </div>
         </div>
 
-        <div style="margin-top: 56px">
+        <div class="sub-content" data-sub="phrases">
           <div class="section-label">phrases</div>
           <h2 class="section-title" id="phrasesTitle">just enough</h2>
           <div class="phrase-list" id="phraseList"></div>
         </div>
 
-        <div style="margin-top: 56px">
-          <div class="section-label">directory</div>
-          <h2 class="section-title">places</h2>
-          <div id="placesContainer"></div>
-        </div>
-
-        <div style="margin-top: 56px">
+        <div class="sub-content" data-sub="tips">
           <div class="section-label">notes</div>
           <h2 class="section-title">small things</h2>
           <div id="tipsContainer"></div>
@@ -2616,7 +2666,7 @@ function setActiveTripTab(tab) {
   document.querySelectorAll('.trip-tab-content').forEach(el => {
     el.classList.toggle('active', el.dataset.tab === tab);
   });
-  // Map 탭 진입 시 지도 초기화/리프레시
+  // Map 탭 진입 시 지도 초기화/리프레시 (sub-tab이 'view'일 때만)
   if (tab === 'map') {
     initMap();
     setTimeout(() => {
@@ -2624,6 +2674,33 @@ function setActiveTripTab(tab) {
         leafletMap.invalidateSize();
         if (currentTrip) renderMapMarkers();
       }
+    }, 50);
+  }
+}
+
+// Sub-tab handler
+document.querySelectorAll('.sub-nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const parent = btn.closest('.sub-nav').dataset.parent;
+    const sub = btn.dataset.sub;
+    setActiveSubTab(parent, sub);
+  });
+});
+
+function setActiveSubTab(parentTab, sub) {
+  const parentSection = document.querySelector(`.trip-tab-content[data-tab="${parentTab}"]`);
+  if (!parentSection) return;
+  parentSection.querySelectorAll('.sub-nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.sub === sub);
+  });
+  parentSection.querySelectorAll('.sub-content').forEach(el => {
+    el.classList.toggle('active', el.dataset.sub === sub);
+  });
+  // Map sub로 돌아왔을 때 invalidate (places sub에서 view로 올 때)
+  if (parentTab === 'map' && sub === 'view' && leafletMap) {
+    setTimeout(() => {
+      leafletMap.invalidateSize();
+      if (currentTrip) renderMapMarkers();
     }, 50);
   }
 }
