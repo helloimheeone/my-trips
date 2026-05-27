@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="my trips">
+<meta name="theme-color" content="#fafaf7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16140f" media="(prefers-color-scheme: dark)">
+<title>my trips</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="80" fill="%23fafaf7"/><text x="256" y="340" font-family="serif" font-size="280" text-anchor="middle" fill="%231a1a1a" font-weight="300" font-style="italic">mt</text></svg>'>
+<style>
+:root {
+  --bg: #fafaf7;
+  --surface: #ffffff;
+  --text: #1a1a1a;
+  --muted: #8a8a82;
+  --soft: #b8b7b0;
+  --line: #ebeae3;
+  --line-strong: #d8d6cc;
+  --rest-bg: #f3f2eb;
+  --danger: #b04a3a;
+  --accent: #6b7d4a;
+}
+
+[data-theme="dark"] {
+  --bg: #16140f;
+  --surface: #1f1d18;
+  --text: #f0ece2;
+  --muted: #8e8b80;
+  --soft: #5a5852;
+  --line: #2a2823;
+  --line-strong: #3a3832;
+  --rest-bg: #1c1a15;
+  --danger: #c4604f;
+  --accent: #8aa05f;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+body {
+  font-family: 'IBM Plex Sans KR', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+  font-feature-settings: 'kern';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Theme toggle */
+.theme-toggle {
+  position: fixed;
+  top: 14px; right: 14px;
+  z-index: 100;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 15px;
+}
+.theme-toggle:hover { border-color: var(--text); }
+
+/* ====== Login View ====== */
+.login-view {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+}
+
+.login-card {
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+}
+
+.login-kicker {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 8px;
+}
+
+.login-title {
+  font-family: 'Fraunces', serif;
+  font-size: 56px;
+  font-weight: 300;
+  letter-spacing: -0.03em;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+
+.login-sub {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 15px;
+  margin-bottom: 64px;
+}
+
+.login-divider {
+  height: 1px;
+  background: var(--line);
+  margin: 40px 0;
+  position: relative;
+}
+.login-divider::after {
+  content: '·';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg);
+  padding: 0 12px;
+  color: var(--soft);
+  font-family: 'Fraunces', serif;
+}
+
+.google-login-btn {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 15px;
+  padding: 14px 32px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: opacity 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.google-login-btn:hover { opacity: 0.85; }
+.google-login-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.login-hint {
+  margin-top: 32px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--soft);
+  line-height: 1.7;
+}
+
+/* ====== App View ====== */
+.app-view { min-height: 100vh; padding-bottom: 100px; }
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 24px 0;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.app-title {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+.app-title-italic {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--muted);
+}
+
+.user-area {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+
+.text-btn {
+  background: none;
+  border: none;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 6px 10px;
+}
+.text-btn:hover { color: var(--text); }
+
+.trips-container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 40px 24px 0;
+}
+
+.section-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 8px;
+}
+
+.empty-state {
+  padding: 80px 0;
+  text-align: center;
+}
+.empty-state p { color: var(--muted); margin-bottom: 6px; }
+.empty-state .muted { color: var(--soft); font-style: italic; font-family: 'Fraunces', serif; font-size: 13px; }
+
+.trips-group { margin-bottom: 40px; }
+.trips-group:empty + .trips-group-empty,
+.trips-group-empty:has(+ .trips-group:not(:empty)) { display: none; }
+
+.trips-group-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 18px;
+  color: var(--text);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.trips-group-title .count {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--soft);
+  letter-spacing: 0.05em;
+}
+
+.trip-card {
+  position: relative;
+  padding: 22px 20px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.trip-card:hover { border-color: var(--line-strong); transform: translateY(-1px); }
+
+.trip-status {
+  position: absolute;
+  top: 18px; right: 18px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--rest-bg);
+  color: var(--muted);
+}
+.trip-status.status-current { background: var(--accent); color: white; }
+.trip-status.status-upcoming { background: var(--text); color: var(--bg); }
+
+.trip-title {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  margin-bottom: 6px;
+  padding-right: 80px;
+}
+
+.trip-meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.trip-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+.trip-members {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--soft);
+}
+
+.trip-dday {
+  font-family: 'Fraunces', serif;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+/* FAB */
+.fab {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  padding: 14px 28px;
+  border-radius: 30px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 15px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transition: all 0.15s;
+  z-index: 50;
+}
+.fab:hover { transform: translateX(-50%) translateY(-2px); }
+.fab:active { transform: translateX(-50%) translateY(0); }
+
+/* ====== Modals ====== */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.5);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.modal-backdrop.open { display: flex; opacity: 1; }
+
+.modal {
+  background: var(--bg);
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 26px;
+  border-radius: 4px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20px;
+}
+
+.modal-title {
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-family: 'Fraunces', serif;
+  font-weight: 300;
+  font-size: 28px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-field { margin-bottom: 14px; }
+
+.modal-label {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 5px;
+  letter-spacing: 0.02em;
+}
+
+.modal-input {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  background: white;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 9px 12px;
+  outline: none;
+  border-radius: 2px;
+  color: var(--text);
+}
+[data-theme="dark"] .modal-input { background: var(--surface); }
+.modal-input:focus { border-color: var(--text); }
+
+.modal-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.modal-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 22px;
+  align-items: center;
+}
+
+.modal-save {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  padding: 10px 24px;
+  cursor: pointer;
+  border-radius: 2px;
+}
+.modal-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.modal-cancel {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 10px 14px;
+}
+
+/* ====== Loading State ====== */
+.loading-view {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.loading-text {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ====== Mobile ====== */
+@media (max-width: 480px) {
+  .login-title { font-size: 44px; }
+  .app-header { padding: 20px 18px 0; }
+  .trips-container { padding: 32px 18px 0; }
+  .trip-card { padding: 18px 16px; }
+  .trip-title { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<button class="theme-toggle" id="themeToggle" aria-label="테마">🌙</button>
+
+<!-- Loading -->
+<div class="loading-view" id="loadingView">
+  <div class="loading-text">잠시만요…</div>
+</div>
+
+<!-- Login View -->
+<div class="login-view" id="loginView" style="display:none">
+  <div class="login-card">
+    <div class="login-kicker">— plan, together —</div>
+    <h1 class="login-title">my trips</h1>
+    <div class="login-sub">by daisy</div>
+
+    <button class="google-login-btn" id="googleLoginBtn">
+      Google로 시작하기
+    </button>
+
+    <div class="login-hint">
+      여행을 함께 계획하고<br>
+      실시간으로 공유하는 작은 공간.
+    </div>
+  </div>
+</div>
+
+<!-- App View -->
+<div class="app-view" id="appView" style="display:none">
+  <header class="app-header">
+    <h1 class="app-title">my <span class="app-title-italic">trips</span></h1>
+    <div class="user-area">
+      <img id="userAvatar" class="user-avatar" alt="" referrerpolicy="no-referrer">
+      <button class="text-btn" id="logoutBtn">로그아웃</button>
+    </div>
+  </header>
+
+  <div class="trips-container" id="tripsContainer">
+    <div class="empty-state">
+      <div class="loading-text">불러오는 중…</div>
+    </div>
+  </div>
+</div>
+
+<button class="fab" id="newTripBtn" style="display:none">+ 새 여행</button>
+
+<!-- New Trip Modal -->
+<div class="modal-backdrop" id="newTripModal" role="dialog">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">새 여행</h3>
+      <button class="modal-close" id="newTripClose">×</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="nt_title">제목</label>
+      <input class="modal-input" type="text" id="nt_title" placeholder="예: 방콕 2026.06">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="nt_destination">목적지</label>
+      <input class="modal-input" type="text" id="nt_destination" placeholder="예: 방콕">
+    </div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <label class="modal-label" for="nt_start">출발</label>
+        <input class="modal-input" type="date" id="nt_start">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label" for="nt_end">도착</label>
+        <input class="modal-input" type="date" id="nt_end">
+      </div>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-save" id="newTripSave">만들기</button>
+      <button class="modal-cancel" id="newTripCancel">취소</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+import {
+  getAuth, GoogleAuthProvider, signInWithPopup,
+  onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, addDoc, setDoc,
+  onSnapshot, query, where, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+// ===== Firebase Config =====
+const firebaseConfig = {
+  apiKey: "AIzaSyBfqQy7TLEZRvAp3huedt1MyVJRPsbwUws",
+  authDomain: "daisy-trips.firebaseapp.com",
+  projectId: "daisy-trips",
+  storageBucket: "daisy-trips.firebasestorage.app",
+  messagingSenderId: "284381596866",
+  appId: "1:284381596866:web:1160a6278a1a6108757f5b",
+  measurementId: "G-QEP50C0JW0"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ===== State =====
+let currentUser = null;
+let unsubTrips = null;
+
+// ===== Theme Toggle =====
+(function() {
+  const root = document.documentElement;
+  const btn = document.getElementById('themeToggle');
+  const saved = localStorage.getItem('mt-theme');
+  const initial = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  if (initial === 'dark') root.setAttribute('data-theme', 'dark');
+  btn.textContent = initial === 'dark' ? '☀️' : '🌙';
+  btn.addEventListener('click', () => {
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    if (next === 'dark') root.setAttribute('data-theme', 'dark');
+    else root.removeAttribute('data-theme');
+    btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    localStorage.setItem('mt-theme', next);
+  });
+})();
+
+// ===== Auth =====
+onAuthStateChanged(auth, user => {
+  document.getElementById('loadingView').style.display = 'none';
+  if (user) {
+    currentUser = user;
+    showApp(user);
+  } else {
+    currentUser = null;
+    showLogin();
+  }
+});
+
+function showLogin() {
+  document.getElementById('loginView').style.display = '';
+  document.getElementById('appView').style.display = 'none';
+  document.getElementById('newTripBtn').style.display = 'none';
+  if (unsubTrips) { unsubTrips(); unsubTrips = null; }
+}
+
+function showApp(user) {
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('appView').style.display = '';
+  document.getElementById('newTripBtn').style.display = '';
+  const avatar = document.getElementById('userAvatar');
+  if (user.photoURL) avatar.src = user.photoURL;
+  // user 문서 만들거나 업데이트
+  setDoc(doc(db, 'users', user.uid), {
+    email: user.email,
+    displayName: user.displayName,
+    photoURL: user.photoURL,
+    updatedAt: serverTimestamp(),
+  }, { merge: true }).catch(e => console.warn('user doc update failed', e));
+  // 여행 listener 시작
+  listenToTrips(user.uid);
+}
+
+document.getElementById('googleLoginBtn').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  try {
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (err) {
+    console.error(err);
+    let msg = '로그인 실패';
+    if (err.code === 'auth/popup-blocked') msg = '팝업이 차단됐어요. 브라우저 설정에서 허용해주세요.';
+    else if (err.code === 'auth/popup-closed-by-user') msg = '';
+    else if (err.code === 'auth/unauthorized-domain') msg = '이 도메인이 Firebase에 등록되지 않았어요. Authentication → Settings → 승인된 도메인에 추가해주세요.';
+    if (msg) alert(msg);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  if (confirm('로그아웃 할까요?')) signOut(auth);
+});
+
+// ===== Trips List =====
+function listenToTrips(uid) {
+  if (unsubTrips) unsubTrips();
+  const q = query(
+    collection(db, 'trips'),
+    where('memberIds', 'array-contains', uid)
+  );
+  unsubTrips = onSnapshot(q, snapshot => {
+    const trips = [];
+    snapshot.forEach(d => trips.push({ id: d.id, ...d.data() }));
+    renderTrips(trips);
+  }, err => {
+    console.error('Trips listener error:', err);
+    document.getElementById('tripsContainer').innerHTML = `
+      <div class="empty-state">
+        <p style="color:var(--danger)">여행 목록 불러오기 실패</p>
+        <p class="muted">${escapeHtml(err.message)}</p>
+      </div>
+    `;
+  });
+}
+
+function renderTrips(trips) {
+  const c = document.getElementById('tripsContainer');
+  if (trips.length === 0) {
+    c.innerHTML = `
+      <div class="empty-state">
+        <p>아직 여행이 없어요.</p>
+        <p class="muted">아래 + 새 여행 버튼으로 시작해보세요.</p>
+      </div>
+    `;
+    return;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+  const current = [], upcoming = [], past = [], planned = [];
+
+  trips.forEach(trip => {
+    const s = trip.startDate;
+    const e = trip.endDate;
+    if (!s || !e) planned.push(trip);
+    else if (today < s) upcoming.push(trip);
+    else if (today > e) past.push(trip);
+    else current.push(trip);
+  });
+
+  // 정렬
+  upcoming.sort((a, b) => a.startDate.localeCompare(b.startDate));
+  past.sort((a, b) => b.endDate.localeCompare(a.endDate));
+
+  let html = '';
+  if (current.length) {
+    html += renderGroup('현재 진행 중', current);
+  }
+  if (upcoming.length) {
+    html += renderGroup('예정', upcoming);
+  }
+  if (planned.length) {
+    html += renderGroup('계획 중', planned);
+  }
+  if (past.length) {
+    html += renderGroup('지난 여행', past);
+  }
+
+  c.innerHTML = html;
+  c.querySelectorAll('.trip-card').forEach(el => {
+    el.addEventListener('click', () => {
+      const id = el.dataset.tripId;
+      alert(`여행 상세 화면은 다음 단계에서 만들 거예요!\n\nTrip ID: ${id}\n\n방콕 앱의 5탭(Map/Plan/Checklist/Budget/Notes)을 이쪽으로 옮겨올 예정.`);
+    });
+  });
+}
+
+function renderGroup(title, trips) {
+  return `
+    <div class="trips-group">
+      <div class="trips-group-title">${escapeHtml(title)} <span class="count">${trips.length}</span></div>
+      ${trips.map(trip => renderTripCard(trip)).join('')}
+    </div>
+  `;
+}
+
+function renderTripCard(trip) {
+  const status = getTripStatus(trip);
+  const dday = computeDDay(trip);
+  const memberCount = (trip.memberIds && trip.memberIds.length) || 1;
+  return `
+    <div class="trip-card" data-trip-id="${trip.id}">
+      <div class="trip-status status-${status.key}">${status.label}</div>
+      <h2 class="trip-title">${escapeHtml(trip.title)}</h2>
+      <div class="trip-meta">${escapeHtml(trip.destination || '')}${trip.destination ? ' · ' : ''}${formatDateRange(trip.startDate, trip.endDate)}</div>
+      <div class="trip-footer">
+        <span class="trip-members">${memberCount}명${memberCount > 1 ? ' 함께' : ''}</span>
+        ${dday ? `<span class="trip-dday">${dday}</span>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function getTripStatus(trip) {
+  const today = new Date().toISOString().split('T')[0];
+  const s = trip.startDate;
+  const e = trip.endDate;
+  if (!s || !e) return { key: 'planned', label: '계획' };
+  if (today < s) return { key: 'upcoming', label: '예정' };
+  if (today > e) return { key: 'past', label: '지난' };
+  return { key: 'current', label: '진행 중' };
+}
+
+function computeDDay(trip) {
+  if (!trip.startDate) return '';
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const start = new Date(trip.startDate + 'T00:00:00');
+  const diff = Math.round((start - today) / 86400000);
+  if (diff > 0) return `D - ${diff}`;
+  if (diff === 0) return 'D - DAY';
+  if (trip.endDate) {
+    const end = new Date(trip.endDate + 'T00:00:00');
+    if (today <= end) {
+      const dayN = Math.round((today - start) / 86400000) + 1;
+      return `Day ${dayN}`;
+    }
+  }
+  return '';
+}
+
+function formatDateRange(start, end) {
+  if (!start) return '날짜 미정';
+  const fmt = d => {
+    const dt = new Date(d + 'T00:00:00');
+    return `${String(dt.getFullYear()).slice(2)}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`;
+  };
+  if (end) return `${fmt(start)} — ${fmt(end)}`;
+  return fmt(start);
+}
+
+// ===== New Trip Modal =====
+const newTripModal = document.getElementById('newTripModal');
+document.getElementById('newTripBtn').addEventListener('click', openNewTripModal);
+document.getElementById('newTripClose').addEventListener('click', closeNewTripModal);
+document.getElementById('newTripCancel').addEventListener('click', closeNewTripModal);
+document.getElementById('newTripSave').addEventListener('click', createNewTrip);
+newTripModal.addEventListener('click', e => { if (e.target === newTripModal) closeNewTripModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && newTripModal.classList.contains('open')) closeNewTripModal();
+});
+
+function openNewTripModal() {
+  document.getElementById('nt_title').value = '';
+  document.getElementById('nt_destination').value = '';
+  document.getElementById('nt_start').value = '';
+  document.getElementById('nt_end').value = '';
+  newTripModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('nt_title').focus(), 80);
+}
+
+function closeNewTripModal() {
+  newTripModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function createNewTrip() {
+  const title = document.getElementById('nt_title').value.trim();
+  const destination = document.getElementById('nt_destination').value.trim();
+  const startDate = document.getElementById('nt_start').value;
+  const endDate = document.getElementById('nt_end').value;
+  const saveBtn = document.getElementById('newTripSave');
+
+  if (!title) { alert('제목을 입력해주세요'); return; }
+  if (startDate && endDate && endDate < startDate) {
+    alert('도착이 출발보다 빠를 수 없어요'); return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.textContent = '만드는 중…';
+
+  try {
+    await addDoc(collection(db, 'trips'), {
+      title,
+      destination,
+      startDate: startDate || null,
+      endDate: endDate || null,
+      ownerId: currentUser.uid,
+      memberIds: [currentUser.uid],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      data: {
+        plan: [],
+        places: [],
+        checklist: [],
+        budget: [],
+        tips: [],
+        settings: { people: 2, thbRate: 40 }
+      }
+    });
+    closeNewTripModal();
+  } catch (err) {
+    console.error(err);
+    alert('여행 생성 실패: ' + err.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '만들기';
+  }
+}
+
+// ===== Utility =====
+function escapeHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, s => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[s]));
+}
+</script>
+</body>
+</html>
