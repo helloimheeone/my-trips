@@ -2480,19 +2480,74 @@ async function fetchRate() {
   const meta = document.getElementById('rateMeta');
   btn.classList.add('loading');
   meta.textContent = '가져오는 중…';
-  try {
-    const res = await fetch(`https://api.frankfurter.app/latest?from=${settings.currencyCode}&to=KRW`);
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    const rate = data.rates && data.rates.KRW;
-    if (!rate) throw new Error('지원하지 않는 통화일 수 있어요');
-    await updateTripData({ 'data.settings.exchangeRate': rate });
-    const stamp = new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-    meta.textContent = `자동 업데이트 · ${stamp}`;
-  } catch (e) {
-    meta.textContent = '환율 가져오기 실패 — 수동 입력하세요';
-  } finally {
-    btn.classList.remove('loading');
+
+  const code = settings.currencyCode;
+  let rate = null;
+  let source = '';
+  let lastError = '';
+
+  // 1차 시도: frankfurter (도메인 두 개 시도)
+  for (const host of ['api.frankfurter.dev', 'api.frankfurter.app']) {
+    try {
+      const res = await fetch(`https://${host}/v1/latest?base=${code}&symbols=KRW`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data && data.rates && typeof data.rates.KRW === 'number') {
+        rate = data.rates.KRW;
+        source = 'frankfurter';
+        break;
+      } else if (data && data.message) {
+        lastError = data.message;
+      }
+    } catch (e) {
+      lastError = e.message || 'fetch 실패';
+    }
+  }
+
+  // 2차 시도: exchangerate.host (frankfurter 미지원 통화용)
+  if (rate == null) {
+    try {
+      const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${code}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.rates && typeof data.rates.KRW === 'number') {
+          rate = data.rates.KRW;
+          source = 'exchangerate-api';
+        }
+      }
+    } catch (e) {
+      lastError = e.message || lastError;
+    }
+  }
+
+  // 3차 시도: open.er-api.com (또 다른 무료 API)
+  if (rate == null) {
+    try {
+      const res = await fetch(`https://open.er-api.com/v6/latest/${code}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.rates && typeof data.rates.KRW === 'number') {
+          rate = data.rates.KRW;
+          source = 'open.er-api';
+        }
+      }
+    } catch (e) {
+      lastError = e.message || lastError;
+    }
+  }
+
+  btn.classList.remove('loading');
+
+  if (rate != null) {
+    try {
+      await updateTripData({ 'data.settings.exchangeRate': rate });
+      const stamp = new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      meta.textContent = `자동 업데이트 (${source}) · ${stamp}`;
+    } catch (e) {
+      meta.textContent = '환율은 받았지만 저장 실패: ' + e.message;
+    }
+  } else {
+    meta.textContent = `${code} 환율 가져오기 실패 — 수동 입력하세요${lastError ? ' (' + lastError + ')' : ''}`;
   }
 }
 
