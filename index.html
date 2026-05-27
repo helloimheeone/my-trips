@@ -623,6 +623,423 @@ body {
 .pop-link:hover { border-bottom-color: var(--text); }
 
 [data-theme="dark"] .leaflet-tile-pane { filter: brightness(0.85) contrast(0.95); }
+
+/* ====== Checklist Tab ====== */
+.checklist-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.checklist-add input {
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid var(--line-strong);
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 8px 0;
+  color: var(--text);
+  outline: none;
+}
+.checklist-add input::placeholder { color: var(--soft); }
+.checklist-add input:focus { border-bottom-color: var(--text); }
+.checklist-add button {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.checklist-add button:hover {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.checklist-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.checklist-item:last-child { border-bottom: none; }
+
+.check-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.checkbox {
+  width: 20px; height: 20px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.checklist-item.checked .checkbox { background: var(--text); border-color: var(--text); }
+.checklist-item.checked .checkbox::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.checklist-text {
+  font-size: 15px;
+  flex: 1;
+  transition: color 0.15s;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.checklist-item.checked .checklist-text {
+  color: var(--soft);
+  text-decoration: line-through;
+  text-decoration-color: var(--soft);
+}
+
+.checklist-edit-input {
+  font-family: inherit;
+  font-size: 15px;
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid var(--text);
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  padding: 0 0 2px 0;
+  line-height: 1.5;
+  min-width: 0;
+  width: 100%;
+}
+
+.item-delete {
+  background: none;
+  border: none;
+  color: var(--soft);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 6px;
+  opacity: 0;
+  transition: all 0.15s;
+}
+.checklist-item:hover .item-delete { opacity: 1; }
+.item-delete:hover { color: var(--danger); }
+
+.checklist-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+.checklist-empty .muted { color: var(--soft); font-style: italic; font-family: 'Fraunces', serif; font-size: 13px; margin-top: 4px; }
+
+/* ====== Budget Tab ====== */
+.budget-config {
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--line);
+}
+.config-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 0;
+}
+.config-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+.config-select, .config-row input[type="number"] {
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 6px 10px;
+  color: var(--text);
+  outline: none;
+  border-radius: 2px;
+  width: 140px;
+  text-align: right;
+}
+.config-select { padding-right: 28px; -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%238a8a82' fill='none' stroke-width='1'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  cursor: pointer; text-align: left;
+}
+.config-row input[type="number"]:focus, .config-select:focus { border-color: var(--text); }
+
+.rate-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rate-input-wrap input { width: 100px; }
+.rate-fetch-btn {
+  width: 32px; height: 32px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 14px;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+.rate-fetch-btn:hover { border-color: var(--text); color: var(--text); }
+.rate-fetch-btn.loading { animation: spin 0.9s linear infinite; }
+@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+.rate-meta {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--soft);
+  margin-top: 4px;
+  text-align: right;
+  min-height: 14px;
+}
+
+.budget-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--rest-bg);
+  border-radius: 4px;
+  margin-bottom: 24px;
+}
+.budget-form input[type="text"],
+.budget-form input[type="number"],
+.budget-form select {
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  font-family: inherit;
+  font-size: 14px;
+  padding: 9px 12px;
+  color: var(--text);
+  outline: none;
+  border-radius: 2px;
+}
+.budget-form-row { display: grid; grid-template-columns: 1fr 110px; gap: 10px; }
+.budget-form input:focus, .budget-form select:focus { border-color: var(--text); }
+
+.amount-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+}
+.amount-input-wrap input[type="number"] {
+  flex: 1;
+  min-width: 0;
+  border-right: none;
+}
+.currency-toggle {
+  display: flex;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+}
+.cur-btn {
+  background: none;
+  border: none;
+  padding: 0 12px;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'Fraunces', serif;
+  min-width: 38px;
+  transition: all 0.15s;
+}
+.cur-btn.active { background: var(--text); color: var(--bg); }
+.cur-btn:first-child { border-right: 1px solid var(--line-strong); }
+.cur-btn.active:first-child { border-right-color: var(--text); }
+
+.amount-preview {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 16px;
+  margin-top: -4px;
+}
+
+.split-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--muted);
+  user-select: none;
+}
+.mini-check {
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--line-strong);
+  border-radius: 3px;
+  position: relative;
+  transition: all 0.15s;
+}
+.split-toggle.on .mini-check { background: var(--text); border-color: var(--text); }
+.split-toggle.on .mini-check::after {
+  content: '';
+  position: absolute;
+  left: 4px; top: 0px;
+  width: 4px; height: 9px;
+  border: solid white;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.budget-add-btn {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  padding: 11px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: opacity 0.15s;
+}
+.budget-add-btn:hover { opacity: 0.85; }
+
+.budget-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 14px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.budget-item:last-child { border-bottom: none; }
+
+.bi-name { font-size: 14px; }
+.bi-meta {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--soft);
+  margin-top: 2px;
+}
+.bi-amount {
+  font-family: 'Fraunces', serif;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  text-align: right;
+}
+.bi-baht {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.budget-empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: var(--soft);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+}
+
+.budget-summary {
+  border-top: 2px solid var(--text);
+  margin-top: 32px;
+  padding-top: 20px;
+}
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+}
+.summary-total-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--muted);
+}
+.summary-total-value {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.summary-row-label { color: var(--muted); }
+.summary-row-value {
+  font-family: 'Fraunces', serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-per-person {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--line);
+  text-align: center;
+}
+.spp-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+.spp-value {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  margin: 4px 0 6px;
+  font-variant-numeric: tabular-nums;
+}
+.spp-sub {
+  font-size: 11px;
+  color: var(--soft);
+}
+
+.bi-delete {
+  background: none;
+  border: none;
+  color: var(--soft);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+  opacity: 0;
+  transition: all 0.15s;
+}
+.budget-item:hover .bi-delete { opacity: 1; }
+.bi-delete:hover { color: var(--danger); }
+
+@media (max-width: 480px) {
+  .budget-form-row { grid-template-columns: 1fr; }
+  .config-select, .config-row input[type="number"] { width: 120px; }
+  .bi-delete { opacity: 1; }
+}
+
 .plan-empty {
   padding: 60px 20px;
   text-align: center;
@@ -1083,23 +1500,60 @@ body {
       </section>
 
       <section class="trip-tab-content" data-tab="checklist">
-        <div class="placeholder-block">
-          <div class="placeholder-kicker">checklist</div>
-          <div class="placeholder-title">체크리스트</div>
-          <div class="placeholder-body">짐 / 준비물 / 출국 전 할 일.</div>
-          <div class="placeholder-tag">F3-B에서 만들기</div>
-          <div class="placeholder-stat" id="checklistStat">— items</div>
+        <div class="checklist-add">
+          <input type="text" id="newCheckInput" placeholder="새 항목 (Enter)">
+          <button id="addCheckBtn">+</button>
         </div>
+        <div id="checklistContainer"></div>
       </section>
 
       <section class="trip-tab-content" data-tab="budget">
-        <div class="placeholder-block">
-          <div class="placeholder-kicker">budget</div>
-          <div class="placeholder-title">비용</div>
-          <div class="placeholder-body">원/현지통화 양방향, 결제수단별, 인당 계산.</div>
-          <div class="placeholder-tag">F3-B에서 만들기</div>
-          <div class="placeholder-stat" id="budgetStat">— items</div>
+        <div class="budget-config">
+          <div class="config-row">
+            <span class="config-label">인원 (인당 계산용)</span>
+            <input type="number" id="peopleCount" value="2" min="1" max="20">
+          </div>
+          <div class="config-row">
+            <span class="config-label">현지 통화</span>
+            <select id="currencyCode" class="config-select"></select>
+          </div>
+          <div class="config-row">
+            <span class="config-label" id="rateLabel">환율 (1 ฿ = ? 원)</span>
+            <div class="rate-input-wrap">
+              <input type="number" id="exchangeRate" value="40" min="0" step="0.001">
+              <button type="button" class="rate-fetch-btn" id="rateFetchBtn" title="실시간 환율 가져오기">↻</button>
+            </div>
+          </div>
+          <div class="rate-meta" id="rateMeta"></div>
         </div>
+
+        <div class="budget-form">
+          <input type="text" id="bName" placeholder="비용 이름 (예: 수코타이 1박)">
+          <div class="budget-form-row">
+            <div class="amount-input-wrap">
+              <input type="number" id="bAmount" placeholder="금액" inputmode="decimal" step="0.01">
+              <div class="currency-toggle" id="currencyToggle">
+                <button type="button" class="cur-btn active" data-cur="KRW">₩</button>
+                <button type="button" class="cur-btn" data-cur="LOCAL">฿</button>
+              </div>
+            </div>
+            <select id="bPayment">
+              <option value="corp_card">법인카드</option>
+              <option value="personal_card">개인카드</option>
+              <option value="cash">개인현금</option>
+            </select>
+          </div>
+          <div class="amount-preview" id="amountPreview"></div>
+          <label class="split-toggle on" id="splitToggle">
+            <span class="mini-check"></span>
+            <span>인당 비용 계산에 포함</span>
+          </label>
+          <button class="budget-add-btn" id="addBudgetBtn">add expense</button>
+        </div>
+
+        <div id="budgetList"></div>
+
+        <div class="budget-summary" id="budgetSummary"></div>
       </section>
 
       <section class="trip-tab-content" data-tab="notes">
@@ -1671,19 +2125,15 @@ function renderTripDetail(trip) {
   if (trip.startDate) meta.push(formatDateRange(trip.startDate, trip.endDate));
   document.getElementById('th_meta').textContent = meta.join(' · ') || '날짜 미정';
 
-  // 탭 stats
+  // 탭 stats (placeholder용)
   const d = trip.data || {};
-  const placeCount = (d.places || []).length;
-  const checkCount = (d.checklist || []).length;
-  const budgetCount = (d.budget || []).length;
-
-  const checkStat = document.getElementById('checklistStat');
-  if (checkStat) checkStat.textContent = `${checkCount} items`;
-  const budgetStat = document.getElementById('budgetStat');
-  if (budgetStat) budgetStat.textContent = `${budgetCount} items`;
 
   // Plan 탭 렌더
   renderPlan(d.plan || []);
+  // Checklist 탭 렌더
+  renderChecklist(d.checklist || []);
+  // Budget 탭 렌더
+  renderBudget(d.budget || []);
   // Map 탭 마커 (활성이면 즉시, 아니면 다음 활성화 시)
   if (activeTripTab === 'map' && leafletMap) {
     renderMapMarkers();
@@ -1853,6 +2303,391 @@ async function updateTripData(updates) {
 }
 // 전역에 노출 (다음 단계에서 사용)
 window._tripAPI = { updateTripData };
+
+// ===== Budget Tab =====
+const CURRENCIES = {
+  THB: { symbol: '฿', label: '태국 바트', defaultRate: 40 },
+  JPY: { symbol: '¥', label: '일본 엔', defaultRate: 9 },
+  USD: { symbol: '$', label: '미국 달러', defaultRate: 1380 },
+  EUR: { symbol: '€', label: '유로', defaultRate: 1480 },
+  GBP: { symbol: '£', label: '영국 파운드', defaultRate: 1750 },
+  VND: { symbol: '₫', label: '베트남 동', defaultRate: 0.055 },
+  IDR: { symbol: 'Rp', label: '인도네시아 루피아', defaultRate: 0.087 },
+  PHP: { symbol: '₱', label: '필리핀 페소', defaultRate: 24 },
+  TWD: { symbol: 'NT$', label: '대만 달러', defaultRate: 43 },
+  HKD: { symbol: 'HK$', label: '홍콩 달러', defaultRate: 178 },
+  SGD: { symbol: 'S$', label: '싱가포르 달러', defaultRate: 1030 },
+  MYR: { symbol: 'RM', label: '말레이시아 링깃', defaultRate: 310 },
+  CNY: { symbol: '¥', label: '중국 위안', defaultRate: 190 },
+  AUD: { symbol: 'A$', label: '호주 달러', defaultRate: 910 },
+  CAD: { symbol: 'C$', label: '캐나다 달러', defaultRate: 1000 },
+  CHF: { symbol: 'Fr', label: '스위스 프랑', defaultRate: 1560 },
+};
+
+// Currency select 옵션 채우기 (한 번만)
+(function fillCurrencyOptions() {
+  const sel = document.getElementById('currencyCode');
+  if (!sel) return;
+  sel.innerHTML = Object.entries(CURRENCIES).map(([code, c]) =>
+    `<option value="${code}">${code} (${c.symbol}) · ${c.label}</option>`
+  ).join('');
+})();
+
+let inputCurrency = 'KRW'; // 입력 시 어떤 통화로
+
+function getBudgetSettings() {
+  const s = (currentTrip && currentTrip.data && currentTrip.data.settings) || {};
+  const code = s.currencyCode || 'THB';
+  const cur = CURRENCIES[code] || CURRENCIES.THB;
+  return {
+    people: s.people || 2,
+    currencyCode: code,
+    currencySymbol: cur.symbol,
+    rate: s.exchangeRate || cur.defaultRate,
+  };
+}
+
+function fmtMoney(n) {
+  return '₩ ' + Math.round(n || 0).toLocaleString('ko-KR');
+}
+function fmtLocal(n) {
+  const { currencySymbol, rate } = getBudgetSettings();
+  if (!rate) return '';
+  const local = (n || 0) / rate;
+  const decimals = local < 10 ? 2 : 0;
+  return currencySymbol + ' ' + local.toLocaleString('ko-KR', { maximumFractionDigits: decimals });
+}
+function fmtDual(n) {
+  return `${fmtMoney(n)} <span class="bi-baht">/ ${fmtLocal(n)}</span>`;
+}
+
+function renderBudget(budget) {
+  const items = budget || [];
+  const settings = getBudgetSettings();
+
+  // Config 값 동기화
+  const peopleInput = document.getElementById('peopleCount');
+  if (peopleInput && document.activeElement !== peopleInput) peopleInput.value = settings.people;
+  const currencySelect = document.getElementById('currencyCode');
+  if (currencySelect && document.activeElement !== currencySelect) currencySelect.value = settings.currencyCode;
+  const rateInput = document.getElementById('exchangeRate');
+  if (rateInput && document.activeElement !== rateInput) rateInput.value = settings.rate;
+
+  // 환율 레이블 + 입력 토글 심볼 업데이트
+  const rateLabel = document.getElementById('rateLabel');
+  if (rateLabel) rateLabel.textContent = `환율 (1 ${settings.currencySymbol} = ? 원)`;
+  const localBtn = document.querySelector('#currencyToggle [data-cur="LOCAL"]');
+  if (localBtn) localBtn.textContent = settings.currencySymbol;
+
+  // 리스트
+  const list = document.getElementById('budgetList');
+  if (items.length === 0) {
+    list.innerHTML = '<div class="budget-empty">아직 비용이 없어요</div>';
+  } else {
+    const payLabels = { corp_card: '법인카드', personal_card: '개인카드', cash: '개인현금' };
+    list.innerHTML = items.map(it => `
+      <div class="budget-item" data-id="${escapeAttr(it.id)}">
+        <div>
+          <div class="bi-name">${escapeHtml(it.name)}</div>
+          <div class="bi-meta">${payLabels[it.payment] || '기타'}${it.includeSplit ? '' : ' · 인당 제외'}</div>
+        </div>
+        <div class="bi-amount">${fmtDual(it.amount)}</div>
+        <button class="bi-delete" title="삭제">×</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('.budget-item').forEach(el => {
+      const id = el.dataset.id;
+      el.querySelector('.bi-delete').addEventListener('click', async () => {
+        if (!confirm('삭제할까요?')) return;
+        const items = cloneBudget().filter(x => x.id !== id);
+        await saveBudget(items);
+      });
+    });
+  }
+
+  // Summary
+  const summary = document.getElementById('budgetSummary');
+  if (items.length === 0) {
+    summary.innerHTML = '';
+    return;
+  }
+  const byPayment = { corp_card: 0, personal_card: 0, cash: 0 };
+  let total = 0, splitTotal = 0;
+  items.forEach(it => {
+    total += it.amount || 0;
+    byPayment[it.payment] = (byPayment[it.payment] || 0) + (it.amount || 0);
+    if (it.includeSplit) splitTotal += it.amount || 0;
+  });
+  const perPerson = splitTotal / settings.people;
+  summary.innerHTML = `
+    <div class="summary-total">
+      <span class="summary-total-label">total</span>
+      <span class="summary-total-value">${fmtDual(total)}</span>
+    </div>
+    <div class="summary-row"><span class="summary-row-label">법인카드</span><span class="summary-row-value">${fmtDual(byPayment.corp_card)}</span></div>
+    <div class="summary-row"><span class="summary-row-label">개인카드</span><span class="summary-row-value">${fmtDual(byPayment.personal_card)}</span></div>
+    <div class="summary-row"><span class="summary-row-label">개인현금</span><span class="summary-row-value">${fmtDual(byPayment.cash)}</span></div>
+    <div class="summary-per-person">
+      <div class="spp-label">per person</div>
+      <div class="spp-value">${fmtDual(Math.round(perPerson))}</div>
+      <div class="spp-sub">${settings.people}명 기준 · 인당 계산 포함 항목만 (${fmtMoney(splitTotal)})</div>
+    </div>
+  `;
+}
+
+function cloneBudget() {
+  return JSON.parse(JSON.stringify((currentTrip && currentTrip.data && currentTrip.data.budget) || []));
+}
+
+async function saveBudget(items) {
+  await updateTripData({ 'data.budget': items });
+}
+
+// People / currency / rate handlers
+document.getElementById('peopleCount').addEventListener('change', async e => {
+  const n = Math.max(1, parseInt(e.target.value, 10) || 1);
+  e.target.value = n;
+  if (!currentTrip) return;
+  await updateTripData({ 'data.settings.people': n });
+});
+
+document.getElementById('currencyCode').addEventListener('change', async e => {
+  if (!currentTrip) return;
+  const code = e.target.value;
+  const cur = CURRENCIES[code];
+  if (!cur) return;
+  // 통화 바꾸면 환율도 기본값으로 (사용자가 ↻로 갱신)
+  await updateTripData({
+    'data.settings.currencyCode': code,
+    'data.settings.exchangeRate': cur.defaultRate,
+  });
+});
+
+document.getElementById('exchangeRate').addEventListener('change', async e => {
+  if (!currentTrip) return;
+  const r = Math.max(0.0001, parseFloat(e.target.value) || 1);
+  e.target.value = r;
+  await updateTripData({ 'data.settings.exchangeRate': r });
+});
+
+// Rate auto-fetch (frankfurter.app)
+document.getElementById('rateFetchBtn').addEventListener('click', fetchRate);
+
+async function fetchRate() {
+  if (!currentTrip) return;
+  const settings = getBudgetSettings();
+  const btn = document.getElementById('rateFetchBtn');
+  const meta = document.getElementById('rateMeta');
+  btn.classList.add('loading');
+  meta.textContent = '가져오는 중…';
+  try {
+    const res = await fetch(`https://api.frankfurter.app/latest?from=${settings.currencyCode}&to=KRW`);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    const rate = data.rates && data.rates.KRW;
+    if (!rate) throw new Error('지원하지 않는 통화일 수 있어요');
+    await updateTripData({ 'data.settings.exchangeRate': rate });
+    const stamp = new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    meta.textContent = `자동 업데이트 · ${stamp}`;
+  } catch (e) {
+    meta.textContent = '환율 가져오기 실패 — 수동 입력하세요';
+  } finally {
+    btn.classList.remove('loading');
+  }
+}
+
+// Currency toggle (입력 통화)
+document.querySelectorAll('#currencyToggle .cur-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#currencyToggle .cur-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    inputCurrency = btn.dataset.cur;
+    updateAmountPreview();
+  });
+});
+
+document.getElementById('bAmount').addEventListener('input', updateAmountPreview);
+
+function updateAmountPreview() {
+  const preview = document.getElementById('amountPreview');
+  const raw = parseFloat(document.getElementById('bAmount').value);
+  if (!raw || raw <= 0) { preview.textContent = ''; return; }
+  const settings = getBudgetSettings();
+  if (inputCurrency === 'KRW') {
+    const local = raw / settings.rate;
+    const decimals = local < 10 ? 2 : 0;
+    preview.textContent = `≈ ${settings.currencySymbol} ${local.toLocaleString('ko-KR', { maximumFractionDigits: decimals })}`;
+  } else {
+    const won = Math.round(raw * settings.rate);
+    preview.textContent = `≈ ₩ ${won.toLocaleString('ko-KR')}`;
+  }
+}
+
+// Split toggle
+const splitToggleEl = document.getElementById('splitToggle');
+splitToggleEl.addEventListener('click', () => splitToggleEl.classList.toggle('on'));
+
+// Add expense
+document.getElementById('addBudgetBtn').addEventListener('click', async () => {
+  if (!currentTrip) return;
+  const name = document.getElementById('bName').value.trim();
+  const raw = parseFloat(document.getElementById('bAmount').value);
+  const payment = document.getElementById('bPayment').value;
+  const includeSplit = splitToggleEl.classList.contains('on');
+
+  if (!name) { alert('비용 이름을 입력해주세요'); return; }
+  if (!raw || raw <= 0) { alert('금액을 입력해주세요'); return; }
+
+  const settings = getBudgetSettings();
+  const amount = inputCurrency === 'KRW' ? Math.round(raw) : Math.round(raw * settings.rate);
+
+  const items = cloneBudget();
+  items.push({
+    id: 'b' + Date.now(),
+    name, amount, payment, includeSplit,
+    createdAt: Date.now(),
+  });
+  try {
+    await saveBudget(items);
+    document.getElementById('bName').value = '';
+    document.getElementById('bAmount').value = '';
+    updateAmountPreview();
+  } catch (e) {
+    alert('저장 실패: ' + e.message);
+  }
+});
+
+// ===== Checklist Tab =====
+function renderChecklist(items) {
+  const c = document.getElementById('checklistContainer');
+  if (!c) return;
+  const list = items || [];
+  if (list.length === 0) {
+    c.innerHTML = `
+      <div class="checklist-empty">
+        <p>아직 항목이 없어요</p>
+        <p class="muted">위에 입력하고 + 또는 Enter</p>
+      </div>
+    `;
+    return;
+  }
+  c.innerHTML = list.map(item => `
+    <div class="checklist-item ${item.checked ? 'checked' : ''}" data-id="${escapeAttr(item.id)}">
+      <div class="check-area">
+        <div class="checkbox"></div>
+        <div class="checklist-text">${escapeHtml(item.text)}</div>
+      </div>
+      <button class="item-delete" title="삭제">×</button>
+    </div>
+  `).join('');
+
+  c.querySelectorAll('.checklist-item').forEach(el => {
+    const id = el.dataset.id;
+    el.querySelector('.checkbox').addEventListener('click', e => {
+      e.stopPropagation();
+      toggleCheckItem(id);
+    });
+    el.querySelector('.checklist-text').addEventListener('click', e => {
+      e.stopPropagation();
+      startChecklistEdit(el, id);
+    });
+    el.querySelector('.item-delete').addEventListener('click', async () => {
+      if (!confirm('삭제할까요?')) return;
+      await deleteCheckItem(id);
+    });
+  });
+}
+
+function cloneChecklist() {
+  return JSON.parse(JSON.stringify((currentTrip && currentTrip.data && currentTrip.data.checklist) || []));
+}
+
+async function saveChecklist(items) {
+  await updateTripData({ 'data.checklist': items });
+}
+
+async function toggleCheckItem(id) {
+  const items = cloneChecklist();
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+  it.checked = !it.checked;
+  await saveChecklist(items);
+}
+
+async function deleteCheckItem(id) {
+  const items = cloneChecklist().filter(x => x.id !== id);
+  await saveChecklist(items);
+}
+
+async function addCheckItem(text) {
+  const items = cloneChecklist();
+  items.push({ id: 'c' + Date.now(), text, checked: false });
+  await saveChecklist(items);
+}
+
+function startChecklistEdit(itemEl, id) {
+  const textEl = itemEl.querySelector('.checklist-text');
+  if (itemEl.classList.contains('editing')) return;
+  itemEl.classList.add('editing');
+
+  const items = cloneChecklist();
+  const it = items.find(x => x.id === id);
+  if (!it) return;
+  const oldText = it.text;
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'checklist-edit-input';
+  input.value = oldText;
+  textEl.replaceWith(input);
+  setTimeout(() => { input.focus(); input.select(); }, 10);
+
+  let done = false;
+  async function commit() {
+    if (done) return;
+    done = true;
+    const newText = input.value.trim();
+    if (newText && newText !== oldText) {
+      const items = cloneChecklist();
+      const it = items.find(x => x.id === id);
+      if (it) {
+        it.text = newText;
+        await saveChecklist(items);
+        return; // render는 listener가 처리
+      }
+    }
+    itemEl.classList.remove('editing');
+    renderChecklist(currentTrip.data.checklist || []);
+  }
+  function cancel() {
+    if (done) return;
+    done = true;
+    itemEl.classList.remove('editing');
+    renderChecklist(currentTrip.data.checklist || []);
+  }
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  });
+}
+
+// Add input handler
+document.getElementById('addCheckBtn').addEventListener('click', addCheckFromInput);
+document.getElementById('newCheckInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addCheckFromInput();
+});
+async function addCheckFromInput() {
+  const input = document.getElementById('newCheckInput');
+  const text = input.value.trim();
+  if (!text || !currentTrip) return;
+  input.value = '';
+  try {
+    await addCheckItem(text);
+  } catch (e) {
+    alert('추가 실패: ' + e.message);
+  }
+}
 
 // ===== Map Tab =====
 let leafletMap = null;
