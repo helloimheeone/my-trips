@@ -299,6 +299,33 @@ body {
   border-top: 1px dashed var(--line);
 }
 
+.trip-card-menu {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+  padding: 0;
+  margin-left: 6px;
+}
+.trip-card-menu:hover {
+  border-color: var(--line-strong);
+  color: var(--text);
+}
+
+.trip-footer-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .trip-members {
   font-family: 'Fraunces', serif;
   font-style: italic;
@@ -882,6 +909,7 @@ const db = getFirestore(app);
 // ===== State =====
 let currentUser = null;
 let unsubTrips = null;
+let currentTripsList = [];
 
 // ===== Theme Toggle =====
 (function() {
@@ -968,6 +996,7 @@ function listenToTrips(uid) {
   unsubTrips = onSnapshot(q, snapshot => {
     const trips = [];
     snapshot.forEach(d => trips.push({ id: d.id, ...d.data() }));
+    currentTripsList = trips;
     renderTrips(trips);
   }, err => {
     console.error('Trips listener error:', err);
@@ -1024,8 +1053,15 @@ function renderTrips(trips) {
 
   c.innerHTML = html;
   c.querySelectorAll('.trip-card').forEach(el => {
-    el.addEventListener('click', () => {
+    el.addEventListener('click', e => {
       const id = el.dataset.tripId;
+      // ⋯ 메뉴 클릭이면 설정 모달
+      if (e.target.closest('[data-action="settings"]')) {
+        e.stopPropagation();
+        const trip = currentTripsList.find(t => t.id === id);
+        if (trip) openTripSettings(trip);
+        return;
+      }
       navigate(`#/trips/${id}`);
     });
   });
@@ -1051,7 +1087,10 @@ function renderTripCard(trip) {
       <div class="trip-meta">${escapeHtml(trip.destination || '')}${trip.destination ? ' · ' : ''}${formatDateRange(trip.startDate, trip.endDate)}</div>
       <div class="trip-footer">
         <span class="trip-members">${memberCount}명${memberCount > 1 ? ' 함께' : ''}</span>
-        ${dday ? `<span class="trip-dday">${dday}</span>` : ''}
+        <div class="trip-footer-right">
+          ${dday ? `<span class="trip-dday">${dday}</span>` : ''}
+          <button class="trip-card-menu" data-action="settings" aria-label="설정" title="설정">⋯</button>
+        </div>
       </div>
     </div>
   `;
@@ -1294,25 +1333,27 @@ function setActiveTripTab(tab) {
 document.getElementById('backBtn').addEventListener('click', () => navigate('#/'));
 
 // ===== Trip Settings Modal =====
+let settingsTrip = null; // 현재 설정 모달이 가리키는 trip (currentTrip이거나, 홈에서 선택한 trip)
 const tripSettingsModal = document.getElementById('tripSettingsModal');
-document.getElementById('tripSettingsBtn').addEventListener('click', openTripSettings);
+document.getElementById('tripSettingsBtn').addEventListener('click', () => openTripSettings(currentTrip));
 document.getElementById('tripSettingsClose').addEventListener('click', closeTripSettings);
 document.getElementById('tripSettingsCancel').addEventListener('click', closeTripSettings);
 document.getElementById('tripSettingsSave').addEventListener('click', saveTripSettings);
-document.getElementById('tripDeleteBtn').addEventListener('click', deleteCurrentTrip);
+document.getElementById('tripDeleteBtn').addEventListener('click', deleteSettingsTrip);
 tripSettingsModal.addEventListener('click', e => { if (e.target === tripSettingsModal) closeTripSettings(); });
 
-function openTripSettings() {
-  if (!currentTrip) return;
-  document.getElementById('ts_title').value = currentTrip.title || '';
-  document.getElementById('ts_destination').value = currentTrip.destination || '';
-  document.getElementById('ts_start').value = currentTrip.startDate || '';
-  document.getElementById('ts_end').value = currentTrip.endDate || '';
+function openTripSettings(trip) {
+  if (!trip) return;
+  settingsTrip = trip;
+  document.getElementById('ts_title').value = trip.title || '';
+  document.getElementById('ts_destination').value = trip.destination || '';
+  document.getElementById('ts_start').value = trip.startDate || '';
+  document.getElementById('ts_end').value = trip.endDate || '';
 
   // 멤버 표시 (간단)
   const memberList = document.getElementById('ts_members');
-  const memberCount = (currentTrip.memberIds || []).length;
-  const isOwner = currentTrip.ownerId === currentUser.uid;
+  const memberCount = (trip.memberIds || []).length;
+  const isOwner = trip.ownerId === currentUser.uid;
   memberList.innerHTML = `
     <div class="member-item">
       <div class="member-name">${memberCount}명 · 본인이 ${isOwner ? '소유자' : '멤버'}</div>
@@ -1329,10 +1370,11 @@ function openTripSettings() {
 function closeTripSettings() {
   tripSettingsModal.classList.remove('open');
   document.body.style.overflow = '';
+  settingsTrip = null;
 }
 
 async function saveTripSettings() {
-  if (!currentTrip) return;
+  if (!settingsTrip) return;
   const title = document.getElementById('ts_title').value.trim();
   const destination = document.getElementById('ts_destination').value.trim();
   const startDate = document.getElementById('ts_start').value || null;
@@ -1347,7 +1389,7 @@ async function saveTripSettings() {
   btn.disabled = true;
   btn.textContent = '저장 중…';
   try {
-    await updateDoc(doc(db, 'trips', currentTrip.id), {
+    await updateDoc(doc(db, 'trips', settingsTrip.id), {
       title, destination, startDate, endDate,
       updatedAt: serverTimestamp(),
     });
@@ -1360,20 +1402,21 @@ async function saveTripSettings() {
   }
 }
 
-async function deleteCurrentTrip() {
-  if (!currentTrip) return;
-  if (currentTrip.ownerId !== currentUser.uid) {
+async function deleteSettingsTrip() {
+  if (!settingsTrip) return;
+  if (settingsTrip.ownerId !== currentUser.uid) {
     alert('소유자만 삭제할 수 있어요'); return;
   }
-  const confirmText = prompt(`정말 "${currentTrip.title}"을(를) 삭제할까요?\n모든 데이터가 사라집니다.\n\n확인하려면 여행 제목을 입력해주세요:`);
-  if (confirmText !== currentTrip.title) {
+  const confirmText = prompt(`정말 "${settingsTrip.title}"을(를) 삭제할까요?\n모든 데이터가 사라집니다.\n\n확인하려면 여행 제목을 입력해주세요:`);
+  if (confirmText !== settingsTrip.title) {
     if (confirmText !== null) alert('제목이 다릅니다. 취소합니다.');
     return;
   }
+  const wasCurrent = currentTrip && currentTrip.id === settingsTrip.id;
   try {
-    await deleteDoc(doc(db, 'trips', currentTrip.id));
+    await deleteDoc(doc(db, 'trips', settingsTrip.id));
     closeTripSettings();
-    navigate('#/');
+    if (wasCurrent) navigate('#/');
   } catch (e) {
     alert('삭제 실패: ' + e.message);
   }
