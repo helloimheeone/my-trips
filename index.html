@@ -12,6 +12,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" defer></script>
 <link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="80" fill="%23fafaf7"/><text x="256" y="340" font-family="serif" font-size="280" text-anchor="middle" fill="%231a1a1a" font-weight="300" font-style="italic">mt</text></svg>'>
 <style>
 :root {
@@ -502,6 +503,181 @@ body {
   color: var(--muted);
 }
 
+/* ====== Plan Tab ====== */
+.plan-empty {
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--muted);
+}
+.plan-empty p { margin-bottom: 6px; }
+.plan-empty .muted { color: var(--soft); font-style: italic; font-family: 'Fraunces', serif; font-size: 13px; }
+
+.day {
+  margin-bottom: 40px;
+}
+
+.day-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 6px;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.day-header:hover { opacity: 0.7; }
+
+.day-num {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 28px;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+.day-date {
+  font-family: 'Fraunces', serif;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+}
+
+.day-theme {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  color: var(--muted);
+  font-size: 16px;
+  margin-bottom: 18px;
+}
+
+.day-events {
+  display: flex;
+  flex-direction: column;
+}
+
+.event {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border-bottom: 1px dashed var(--line);
+  background: var(--bg);
+}
+.event:last-child { border-bottom: none; }
+
+.event-content {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 16px;
+  padding: 14px 0;
+  background: var(--bg);
+  position: relative;
+  z-index: 2;
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1);
+  touch-action: pan-y;
+}
+.event.swipe-open .event-content { transform: translateX(-92px); }
+
+@media (hover: hover) {
+  .event:hover .event-content { background: var(--rest-bg); }
+}
+
+.event-swipe-action {
+  position: absolute;
+  top: 0; right: 0; bottom: 0;
+  width: 92px;
+  background: var(--danger);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  cursor: pointer;
+  z-index: 1;
+  letter-spacing: 0.02em;
+  transform: translateX(100%);
+  transition: transform 0.25s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.event.swipe-open .event-swipe-action { transform: translateX(0); }
+
+.event-time {
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  color: var(--muted);
+  padding-top: 3px;
+}
+.event-name {
+  font-size: 15px;
+  font-weight: 500;
+}
+.event-note {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.55;
+}
+.event-cat-dot {
+  display: inline-block;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  margin-left: 8px;
+  vertical-align: middle;
+  position: relative; top: -2px;
+}
+.event-map-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+}
+.event-map-link:hover { color: var(--text); border-bottom-color: var(--text); }
+
+.sortable-ghost { opacity: 0.3; }
+.sortable-chosen .event-content { background: var(--rest-bg); }
+.sortable-drag {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15);
+  background: var(--surface);
+  border-radius: 4px;
+}
+
+.add-event-btn, .add-day-btn {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+}
+.add-event-btn { margin-top: 14px; }
+.add-day-btn { margin-top: 32px; padding: 16px; }
+.add-event-btn:hover, .add-day-btn:hover {
+  border-color: var(--text);
+  color: var(--text);
+  background: var(--rest-bg);
+}
+
+.modal-textarea {
+  resize: vertical;
+  min-height: 60px;
+  font-family: inherit;
+}
+
+@media (max-width: 480px) {
+  .event-content { grid-template-columns: 56px 1fr; gap: 14px; }
+}
+
 /* ====== Member list (settings) ====== */
 .modal-section {
   margin: 16px 0;
@@ -555,6 +731,19 @@ body {
   padding: 10px 14px;
   margin-left: auto;
 }
+
+.modal-secondary {
+  background: none;
+  border: 1px solid var(--line-strong);
+  color: var(--text);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 9px 16px;
+  border-radius: 2px;
+}
+.modal-secondary:hover { border-color: var(--text); }
 
 /* ====== Modals ====== */
 .modal-backdrop {
@@ -767,13 +956,7 @@ body {
       </section>
 
       <section class="trip-tab-content" data-tab="plan">
-        <div class="placeholder-block">
-          <div class="placeholder-kicker">itinerary</div>
-          <div class="placeholder-title">일정</div>
-          <div class="placeholder-body">하루별 이벤트. 탭→편집, 스와이프→삭제, 길게 눌러 드래그→순서 변경.</div>
-          <div class="placeholder-tag">다음 단계 (F3-A-2)에서 바로 만들기</div>
-          <div class="placeholder-stat" id="planStat">— events</div>
-        </div>
+        <div id="planContainer"></div>
       </section>
 
       <section class="trip-tab-content" data-tab="checklist">
@@ -810,7 +993,73 @@ body {
 
 <button class="fab" id="newTripBtn" style="display:none">+ 새 여행</button>
 
-<!-- Trip Settings Modal -->
+<!-- Event Modal -->
+<div class="modal-backdrop" id="eventModal" role="dialog">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="eventModalTitle">이벤트 편집</h3>
+      <button class="modal-close" id="eventModalClose">×</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="ev_time">시간</label>
+      <input class="modal-input" type="text" id="ev_time" placeholder="예: 09:00 또는 PM">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="ev_name">이름</label>
+      <input class="modal-input" type="text" id="ev_name" placeholder="장소 또는 활동">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="ev_note">메모 (선택)</label>
+      <textarea class="modal-input modal-textarea" id="ev_note" rows="2"></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="ev_url">구글맵 URL (선택)</label>
+      <input class="modal-input" type="url" id="ev_url" placeholder="https://www.google.com/maps/...">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="ev_cat">카테고리</label>
+      <select class="modal-input" id="ev_cat">
+        <option value="">— 없음 —</option>
+        <option value="hotel">호텔</option>
+        <option value="cafe">카페</option>
+        <option value="bar">바·재즈</option>
+        <option value="food">맛집</option>
+        <option value="market">시장·쇼핑</option>
+        <option value="massage">마사지</option>
+        <option value="activity">활동</option>
+        <option value="transport">이동</option>
+      </select>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-save" id="eventModalSave">저장</button>
+      <button class="modal-cancel" id="eventModalCancel">취소</button>
+      <button class="modal-delete" id="eventModalDelete">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- Day Modal -->
+<div class="modal-backdrop" id="dayModal" role="dialog">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="dayModalTitle">날짜 편집</h3>
+      <button class="modal-close" id="dayModalClose">×</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="dy_date">날짜</label>
+      <input class="modal-input" type="date" id="dy_date">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="dy_theme">테마 (선택)</label>
+      <input class="modal-input" type="text" id="dy_theme" placeholder="예: arrival, gently">
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-save" id="dayModalSave">저장</button>
+      <button class="modal-cancel" id="dayModalCancel">취소</button>
+      <button class="modal-delete" id="dayModalDelete">날짜 삭제</button>
+    </div>
+  </div>
+</div>
 <div class="modal-backdrop" id="tripSettingsModal" role="dialog">
   <div class="modal">
     <div class="modal-header">
@@ -843,7 +1092,8 @@ body {
     <div class="modal-buttons">
       <button class="modal-save" id="tripSettingsSave">저장</button>
       <button class="modal-cancel" id="tripSettingsCancel">취소</button>
-      <button class="modal-delete" id="tripDeleteBtn">여행 삭제</button>
+      <button class="modal-secondary" id="tripCloneBtn">복제</button>
+      <button class="modal-delete" id="tripDeleteBtn">삭제</button>
     </div>
   </div>
 </div>
@@ -1297,17 +1547,17 @@ function renderTripDetail(trip) {
 
   // 탭 stats
   const d = trip.data || {};
-  const planCount = (d.plan || []).reduce((s, day) => s + (day.events ? day.events.length : 0), 0);
   const placeCount = (d.places || []).length;
   const checkCount = (d.checklist || []).length;
   const budgetCount = (d.budget || []).length;
 
-  const planStat = document.getElementById('planStat');
-  if (planStat) planStat.textContent = `${planCount} events · ${placeCount} places`;
   const checkStat = document.getElementById('checklistStat');
   if (checkStat) checkStat.textContent = `${checkCount} items`;
   const budgetStat = document.getElementById('budgetStat');
   if (budgetStat) budgetStat.textContent = `${budgetCount} items`;
+
+  // Plan 탭 렌더
+  renderPlan(d.plan || []);
 }
 
 // Trip tab navigation
@@ -1340,6 +1590,7 @@ document.getElementById('tripSettingsClose').addEventListener('click', closeTrip
 document.getElementById('tripSettingsCancel').addEventListener('click', closeTripSettings);
 document.getElementById('tripSettingsSave').addEventListener('click', saveTripSettings);
 document.getElementById('tripDeleteBtn').addEventListener('click', deleteSettingsTrip);
+document.getElementById('tripCloneBtn').addEventListener('click', cloneSettingsTrip);
 tripSettingsModal.addEventListener('click', e => { if (e.target === tripSettingsModal) closeTripSettings(); });
 
 function openTripSettings(trip) {
@@ -1402,6 +1653,38 @@ async function saveTripSettings() {
   }
 }
 
+async function cloneSettingsTrip() {
+  if (!settingsTrip) return;
+  const newTitle = prompt('복제할 여행의 새 제목을 입력해주세요', (settingsTrip.title || '') + ' (복제)');
+  if (newTitle == null) return;
+  const trimmed = newTitle.trim();
+  if (!trimmed) { alert('제목을 입력해주세요'); return; }
+
+  const btn = document.getElementById('tripCloneBtn');
+  btn.disabled = true;
+  btn.textContent = '복제 중…';
+  try {
+    const newDoc = await addDoc(collection(db, 'trips'), {
+      title: trimmed,
+      destination: settingsTrip.destination || '',
+      startDate: null, // 날짜는 비워두기
+      endDate: null,
+      ownerId: currentUser.uid,
+      memberIds: [currentUser.uid],
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      data: JSON.parse(JSON.stringify(settingsTrip.data || {})), // 깊은 복제
+    });
+    closeTripSettings();
+    navigate(`#/trips/${newDoc.id}`);
+  } catch (e) {
+    alert('복제 실패: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '복제';
+  }
+}
+
 async function deleteSettingsTrip() {
   if (!settingsTrip) return;
   if (settingsTrip.ownerId !== currentUser.uid) {
@@ -1431,7 +1714,418 @@ async function updateTripData(updates) {
 // 전역에 노출 (다음 단계에서 사용)
 window._tripAPI = { updateTripData };
 
+// ===== Plan Tab =====
+const CATEGORIES = {
+  hotel:     { label: '호텔',      color: '#1a1a1a' },
+  cafe:      { label: '카페',      color: '#a06a3c' },
+  bar:       { label: '바·재즈',   color: '#7a4e6e' },
+  food:      { label: '맛집',      color: '#6b7d4a' },
+  market:    { label: '시장·쇼핑', color: '#4a6577' },
+  massage:   { label: '마사지',    color: '#b88020' },
+  activity:  { label: '활동',      color: '#5a7d9e' },
+  transport: { label: '이동',      color: '#7a7a7a' },
+};
+
+let suppressNextClick = false;
+
+function renderPlan(plan) {
+  const c = document.getElementById('planContainer');
+  if (!c) return;
+  const days = plan || [];
+
+  if (days.length === 0) {
+    c.innerHTML = `
+      <div class="plan-empty">
+        <p>아직 일정이 없어요.</p>
+        <p class="muted">아래 + 날짜 추가로 시작해보세요.</p>
+      </div>
+      <button class="add-day-btn" id="addDayBtn">+ 날짜 추가</button>
+    `;
+    document.getElementById('addDayBtn').addEventListener('click', () => openDayModal(null));
+    return;
+  }
+
+  c.innerHTML = days.map((day, dayIdx) => `
+    <div class="day" data-day-idx="${dayIdx}">
+      <div class="day-header" data-day-action="edit">
+        <span class="day-num">${String(dayIdx + 1).padStart(2, '0')}</span>
+        <span class="day-date">${escapeHtml(formatDayDate(day.date))}</span>
+      </div>
+      ${day.theme ? `<p class="day-theme">${escapeHtml(day.theme)}</p>` : ''}
+      <div class="day-events" data-day-idx="${dayIdx}">
+        ${(day.events || []).map(ev => renderEvent(ev)).join('')}
+      </div>
+      <button class="add-event-btn" type="button" data-day-idx="${dayIdx}">+ 이벤트 추가</button>
+    </div>
+  `).join('') + `<button class="add-day-btn" id="addDayBtn">+ 날짜 추가</button>`;
+
+  // 이벤트 핸들러
+  c.querySelectorAll('.day-header').forEach(el => {
+    el.addEventListener('click', () => {
+      const dayIdx = parseInt(el.closest('.day').dataset.dayIdx, 10);
+      openDayModal(dayIdx);
+    });
+  });
+
+  c.querySelectorAll('.event').forEach(el => {
+    const content = el.querySelector('.event-content');
+    content.addEventListener('click', e => {
+      if (suppressNextClick) { suppressNextClick = false; return; }
+      if (e.target.closest('a.event-map-link')) return;
+      if (el.classList.contains('swipe-open')) {
+        el.classList.remove('swipe-open');
+        return;
+      }
+      document.querySelectorAll('.event.swipe-open').forEach(o => o.classList.remove('swipe-open'));
+      const dayIdx = parseInt(el.closest('.day').dataset.dayIdx, 10);
+      const eventId = el.dataset.eventId;
+      openEventModal(dayIdx, eventId);
+    });
+    el.querySelector('.event-swipe-action').addEventListener('click', async e => {
+      e.stopPropagation();
+      const dayIdx = parseInt(el.closest('.day').dataset.dayIdx, 10);
+      const eventId = el.dataset.eventId;
+      if (!confirm('이 이벤트 삭제할까요?')) {
+        el.classList.remove('swipe-open');
+        return;
+      }
+      await deleteEvent(dayIdx, eventId);
+    });
+    setupSwipe(el);
+  });
+
+  c.querySelectorAll('.add-event-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const dayIdx = parseInt(btn.dataset.dayIdx, 10);
+      openEventModal(dayIdx, null);
+    });
+  });
+
+  document.getElementById('addDayBtn').addEventListener('click', () => openDayModal(null));
+
+  // SortableJS for reordering events within a day
+  if (typeof Sortable !== 'undefined') {
+    c.querySelectorAll('.day-events').forEach(container => {
+      const dayIdx = parseInt(container.dataset.dayIdx, 10);
+      Sortable.create(container, {
+        animation: 200,
+        delay: 280,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 8,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        dragClass: 'sortable-drag',
+        forceFallback: true,
+        fallbackTolerance: 5,
+        onStart: () => {
+          document.querySelectorAll('.event.swipe-open').forEach(o => o.classList.remove('swipe-open'));
+        },
+        onEnd: async (evt) => {
+          if (evt.oldIndex === evt.newIndex) return;
+          const plan = clonePlan();
+          const events = plan[dayIdx].events;
+          const [moved] = events.splice(evt.oldIndex, 1);
+          events.splice(evt.newIndex, 0, moved);
+          suppressNextClick = true;
+          setTimeout(() => suppressNextClick = false, 300);
+          await savePlan(plan);
+        }
+      });
+    });
+  }
+}
+
+function renderEvent(ev) {
+  const cat = ev.cat && CATEGORIES[ev.cat];
+  return `
+    <div class="event" data-event-id="${escapeAttr(ev.id)}">
+      <div class="event-swipe-action">삭제</div>
+      <div class="event-content">
+        <div class="event-time">${escapeHtml(ev.time || '')}</div>
+        <div>
+          <div class="event-name">${escapeHtml(ev.name || '')}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
+          ${ev.note ? `<div class="event-note">${escapeHtml(ev.note)}</div>` : ''}
+          ${ev.url ? `<a href="${escapeAttr(getMapUrl(ev))}" class="event-map-link" target="_blank" rel="noopener">↗ 지도</a>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function setupSwipe(eventEl) {
+  const content = eventEl.querySelector('.event-content');
+  const action = eventEl.querySelector('.event-swipe-action');
+  let startX = 0, startY = 0, curX = 0, dragging = false, dir = null;
+
+  function start(e) {
+    const t = e.touches ? e.touches[0] : e;
+    startX = t.clientX; startY = t.clientY; curX = 0;
+    dragging = true; dir = null;
+    content.style.transition = 'none';
+    action.style.transition = 'none';
+  }
+  function move(e) {
+    if (!dragging) return;
+    const t = e.touches ? e.touches[0] : e;
+    const dx = t.clientX - startX;
+    const dy = t.clientY - startY;
+    if (!dir) {
+      if (Math.abs(dx) > 6 && Math.abs(dx) > Math.abs(dy)) dir = 'h';
+      else if (Math.abs(dy) > 6) dir = 'v';
+      else return;
+    }
+    if (dir === 'h') {
+      if (e.cancelable) e.preventDefault();
+      const base = eventEl.classList.contains('swipe-open') ? -92 : 0;
+      curX = Math.min(0, Math.max(-110, base + dx));
+      content.style.transform = `translateX(${curX}px)`;
+      action.style.transform = `translateX(${Math.max(0, 92 + curX)}px)`;
+    }
+  }
+  function end() {
+    if (!dragging) return;
+    dragging = false;
+    content.style.transition = '';
+    action.style.transition = '';
+    if (dir === 'h') {
+      content.style.transform = '';
+      action.style.transform = '';
+      if (curX < -40) eventEl.classList.add('swipe-open');
+      else eventEl.classList.remove('swipe-open');
+      if (Math.abs(curX) > 5) {
+        suppressNextClick = true;
+        setTimeout(() => suppressNextClick = false, 300);
+      }
+    }
+  }
+  eventEl.addEventListener('touchstart', start, { passive: true });
+  eventEl.addEventListener('touchmove', move, { passive: false });
+  eventEl.addEventListener('touchend', end);
+  eventEl.addEventListener('touchcancel', end);
+}
+
+function clonePlan() {
+  return JSON.parse(JSON.stringify((currentTrip && currentTrip.data && currentTrip.data.plan) || []));
+}
+
+async function savePlan(newPlan) {
+  await updateTripData({ 'data.plan': newPlan });
+}
+
+async function deleteEvent(dayIdx, eventId) {
+  const plan = clonePlan();
+  if (!plan[dayIdx]) return;
+  plan[dayIdx].events = (plan[dayIdx].events || []).filter(e => e.id !== eventId);
+  await savePlan(plan);
+}
+
+function formatDayDate(dateStr) {
+  if (!dateStr) return '날짜 미정';
+  const dt = new Date(dateStr + 'T00:00:00');
+  if (isNaN(dt)) return dateStr;
+  const days = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+  return `${days[dt.getDay()]} · ${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')}`;
+}
+
+function getMapUrl(p) {
+  if (!p) return '';
+  const name = p.name ? encodeURIComponent(p.name) : '';
+  const hasCoord = p.lat != null && p.lng != null;
+  let placeId = null;
+  if (p.url) {
+    const m = p.url.match(/place_id[:=]([\w-]+)/);
+    if (m) placeId = m[1];
+  }
+  if (placeId && name) return `https://www.google.com/maps/search/?api=1&query=${name}&query_place_id=${placeId}`;
+  if (placeId && hasCoord) return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}&query_place_id=${placeId}`;
+  if (name) return `https://www.google.com/maps/search/?api=1&query=${name}`;
+  if (hasCoord) return `https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}`;
+  return p.url || '';
+}
+
+// ===== Event Modal =====
+let eventModalCtx = { mode: null, dayIdx: null, eventId: null };
+const eventModal = document.getElementById('eventModal');
+
+function openEventModal(dayIdx, eventId) {
+  const plan = clonePlan();
+  if (eventId) {
+    const ev = (plan[dayIdx]?.events || []).find(e => e.id === eventId);
+    if (!ev) return;
+    eventModalCtx = { mode: 'edit', dayIdx, eventId };
+    document.getElementById('eventModalTitle').textContent = '이벤트 편집';
+    document.getElementById('ev_time').value = ev.time || '';
+    document.getElementById('ev_name').value = ev.name || '';
+    document.getElementById('ev_note').value = ev.note || '';
+    document.getElementById('ev_url').value = ev.url || '';
+    document.getElementById('ev_cat').value = ev.cat || '';
+    document.getElementById('eventModalDelete').style.display = '';
+  } else {
+    eventModalCtx = { mode: 'add', dayIdx, eventId: null };
+    document.getElementById('eventModalTitle').textContent = '새 이벤트';
+    document.getElementById('ev_time').value = '';
+    document.getElementById('ev_name').value = '';
+    document.getElementById('ev_note').value = '';
+    document.getElementById('ev_url').value = '';
+    document.getElementById('ev_cat').value = '';
+    document.getElementById('eventModalDelete').style.display = 'none';
+  }
+  eventModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('ev_name').focus(), 80);
+}
+function closeEventModal() {
+  eventModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+async function saveEventFromModal() {
+  const name = document.getElementById('ev_name').value.trim();
+  if (!name) { alert('이름을 입력해주세요'); return; }
+  const url = document.getElementById('ev_url').value.trim();
+  let lat = null, lng = null;
+  if (url) {
+    const m = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+    if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+  }
+  const data = {
+    time: document.getElementById('ev_time').value.trim(),
+    name,
+    note: document.getElementById('ev_note').value.trim(),
+    url,
+    cat: document.getElementById('ev_cat').value,
+    lat, lng,
+  };
+  const plan = clonePlan();
+  if (!plan[eventModalCtx.dayIdx]) return;
+  if (eventModalCtx.mode === 'edit') {
+    const idx = plan[eventModalCtx.dayIdx].events.findIndex(e => e.id === eventModalCtx.eventId);
+    if (idx < 0) return;
+    const existing = plan[eventModalCtx.dayIdx].events[idx];
+    if (data.lat == null && existing.url === data.url) {
+      data.lat = existing.lat;
+      data.lng = existing.lng;
+    }
+    plan[eventModalCtx.dayIdx].events[idx] = { ...existing, ...data };
+  } else {
+    if (!plan[eventModalCtx.dayIdx].events) plan[eventModalCtx.dayIdx].events = [];
+    plan[eventModalCtx.dayIdx].events.push({ id: 'e' + Date.now(), ...data });
+  }
+  try {
+    await savePlan(plan);
+    closeEventModal();
+  } catch (e) {
+    alert('저장 실패: ' + e.message);
+  }
+}
+async function deleteEventFromModal() {
+  if (eventModalCtx.mode !== 'edit') return;
+  if (!confirm('이 이벤트 삭제할까요?')) return;
+  await deleteEvent(eventModalCtx.dayIdx, eventModalCtx.eventId);
+  closeEventModal();
+}
+document.getElementById('eventModalClose').addEventListener('click', closeEventModal);
+document.getElementById('eventModalCancel').addEventListener('click', closeEventModal);
+document.getElementById('eventModalSave').addEventListener('click', saveEventFromModal);
+document.getElementById('eventModalDelete').addEventListener('click', deleteEventFromModal);
+eventModal.addEventListener('click', e => { if (e.target === eventModal) closeEventModal(); });
+
+// ===== Day Modal =====
+let dayModalCtx = { mode: null, dayIdx: null };
+const dayModal = document.getElementById('dayModal');
+
+function openDayModal(dayIdx) {
+  const plan = clonePlan();
+  if (dayIdx != null && plan[dayIdx]) {
+    dayModalCtx = { mode: 'edit', dayIdx };
+    const day = plan[dayIdx];
+    document.getElementById('dayModalTitle').textContent = `Day ${dayIdx + 1} 편집`;
+    document.getElementById('dy_date').value = day.date || '';
+    document.getElementById('dy_theme').value = day.theme || '';
+    document.getElementById('dayModalDelete').style.display = '';
+  } else {
+    dayModalCtx = { mode: 'add', dayIdx: null };
+    document.getElementById('dayModalTitle').textContent = '새 날짜';
+    // 마지막 day 다음 날짜로 기본값
+    let defaultDate = '';
+    if (plan.length > 0) {
+      const lastDate = plan[plan.length - 1].date;
+      if (lastDate) {
+        const d = new Date(lastDate + 'T00:00:00');
+        d.setDate(d.getDate() + 1);
+        defaultDate = d.toISOString().split('T')[0];
+      }
+    } else if (currentTrip && currentTrip.startDate) {
+      defaultDate = currentTrip.startDate;
+    }
+    document.getElementById('dy_date').value = defaultDate;
+    document.getElementById('dy_theme').value = '';
+    document.getElementById('dayModalDelete').style.display = 'none';
+  }
+  dayModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('dy_date').focus(), 80);
+}
+function closeDayModal() {
+  dayModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+async function saveDayFromModal() {
+  const date = document.getElementById('dy_date').value;
+  const theme = document.getElementById('dy_theme').value.trim();
+  const plan = clonePlan();
+  if (dayModalCtx.mode === 'edit') {
+    if (!plan[dayModalCtx.dayIdx]) return;
+    plan[dayModalCtx.dayIdx].date = date || null;
+    plan[dayModalCtx.dayIdx].theme = theme;
+  } else {
+    plan.push({ id: 'd' + Date.now(), date: date || null, theme, events: [] });
+    // 날짜순 정렬
+    plan.sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
+  }
+  try {
+    await savePlan(plan);
+    closeDayModal();
+  } catch (e) {
+    alert('저장 실패: ' + e.message);
+  }
+}
+async function deleteDayFromModal() {
+  if (dayModalCtx.mode !== 'edit') return;
+  const plan = clonePlan();
+  const day = plan[dayModalCtx.dayIdx];
+  if (!day) return;
+  const eventCount = (day.events || []).length;
+  const msg = eventCount > 0
+    ? `이 날짜와 안에 있는 ${eventCount}개 이벤트를 모두 삭제할까요?`
+    : '이 날짜를 삭제할까요?';
+  if (!confirm(msg)) return;
+  plan.splice(dayModalCtx.dayIdx, 1);
+  await savePlan(plan);
+  closeDayModal();
+}
+document.getElementById('dayModalClose').addEventListener('click', closeDayModal);
+document.getElementById('dayModalCancel').addEventListener('click', closeDayModal);
+document.getElementById('dayModalSave').addEventListener('click', saveDayFromModal);
+document.getElementById('dayModalDelete').addEventListener('click', deleteDayFromModal);
+dayModal.addEventListener('click', e => { if (e.target === dayModal) closeDayModal(); });
+
+// 카드 밖 클릭 시 swipe 닫기
+document.addEventListener('click', e => {
+  if (e.target.closest('.event')) return;
+  document.querySelectorAll('.event.swipe-open').forEach(o => o.classList.remove('swipe-open'));
+});
+
+// escape로 모달 닫기
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (eventModal.classList.contains('open')) closeEventModal();
+  else if (dayModal.classList.contains('open')) closeDayModal();
+  else if (newTripModal.classList.contains('open')) closeNewTripModal();
+  else if (tripSettingsModal.classList.contains('open')) closeTripSettings();
+});
+
 // ===== Utility =====
+function escapeAttr(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/"/g, '&quot;'); }
 function escapeHtml(str) {
   return String(str == null ? '' : str).replace(/[&<>"']/g, s => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
