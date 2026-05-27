@@ -1617,15 +1617,39 @@ a.dir-item-arrow:hover { color: var(--text); }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 0;
+  padding: 8px 0;
   font-size: 13px;
+  border-bottom: 1px solid var(--line);
 }
+.member-item:last-child { border-bottom: none; }
 .member-avatar {
-  width: 24px; height: 24px;
+  width: 28px; height: 28px;
   border-radius: 50%;
   object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  background: var(--rest-bg);
 }
-.member-name { flex: 1; }
+.member-info {
+  flex: 1;
+  min-width: 0;
+}
+.member-name {
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.member-email {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--soft);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .member-role {
   font-family: 'Fraunces', serif;
   font-style: italic;
@@ -1634,7 +1658,155 @@ a.dir-item-arrow:hover { color: var(--text); }
   padding: 2px 8px;
   background: var(--rest-bg);
   border-radius: 10px;
+  flex-shrink: 0;
 }
+.member-remove {
+  background: none;
+  border: none;
+  color: var(--soft);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 0 6px;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.member-remove:hover { color: var(--danger); }
+.member-count {
+  font-style: normal;
+  font-size: 10px;
+  color: var(--soft);
+  letter-spacing: 0.05em;
+  margin-left: 6px;
+}
+
+.invite-area {
+  margin-top: 4px;
+}
+.invite-create-btn {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  background: none;
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+.invite-create-btn:hover {
+  border-color: var(--text);
+  color: var(--text);
+  background: var(--rest-bg);
+}
+
+.invite-active {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--rest-bg);
+  padding: 12px;
+}
+.invite-link-box {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.invite-link-input {
+  flex: 1;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  padding: 7px 9px;
+  color: var(--text);
+  outline: none;
+  border-radius: 2px;
+  min-width: 0;
+}
+.invite-action-btn {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  padding: 7px 12px;
+  cursor: pointer;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.invite-action-btn.secondary {
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--line-strong);
+}
+.invite-action-btn.secondary:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+.invite-hint {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--soft);
+  line-height: 1.5;
+}
+
+/* Join screen */
+.join-card {
+  max-width: 380px;
+  width: 100%;
+  text-align: center;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--surface);
+}
+.join-title {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 6px;
+}
+.join-meta {
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 22px;
+}
+.join-btn {
+  background: var(--text);
+  color: var(--bg);
+  border: none;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  padding: 12px 28px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.join-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  padding: 10px 18px;
+  border-radius: 22px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  z-index: 2000;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; }
 .modal-hint {
   font-family: 'Fraunces', serif;
   font-style: italic;
@@ -2102,9 +2274,15 @@ a.dir-item-arrow:hover { color: var(--text); }
       </div>
     </div>
     <div class="modal-section">
-      <div class="modal-label">멤버</div>
+      <div class="modal-label">멤버 <span class="member-count" id="ts_memberCount"></span></div>
       <div id="ts_members" class="member-list">—</div>
-      <div class="modal-hint">멤버 초대는 F3-C에서 만들 거예요</div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-label">공유</div>
+      <div id="ts_inviteArea" class="invite-area">
+        <button type="button" class="invite-create-btn" id="inviteCreateBtn">+ 공유 링크 만들기</button>
+      </div>
     </div>
     <div class="modal-buttons">
       <button class="modal-save" id="tripSettingsSave">저장</button>
@@ -2210,6 +2388,8 @@ a.dir-item-arrow:hover { color: var(--text); }
     </div>
   </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
@@ -2514,6 +2694,14 @@ async function createNewTrip() {
       endDate: endDate || null,
       ownerId: currentUser.uid,
       memberIds: [currentUser.uid],
+      memberInfo: {
+        [currentUser.uid]: {
+          displayName: currentUser.displayName || '',
+          email: currentUser.email || '',
+          photoURL: currentUser.photoURL || '',
+        }
+      },
+      inviteToken: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       data: {
@@ -2552,8 +2740,10 @@ function parseRoute() {
   if (hash === '#/' || hash === '#' || hash === '' || hash === '#/trips') {
     return { name: 'home' };
   }
-  const m = hash.match(/^#\/trips\/([\w-]+)$/);
-  if (m) return { name: 'trip', tripId: m[1] };
+  const trip = hash.match(/^#\/trips\/([\w-]+)$/);
+  if (trip) return { name: 'trip', tripId: trip[1] };
+  const inv = hash.match(/^#\/invite\/([\w-]+)\/([\w-]+)$/);
+  if (inv) return { name: 'invite', tripId: inv[1], token: inv[2] };
   return { name: 'home' };
 }
 
@@ -2572,6 +2762,8 @@ function applyRoute() {
     showHome();
   } else if (route.name === 'trip') {
     showTripDetail(route.tripId);
+  } else if (route.name === 'invite') {
+    showInviteJoin(route.tripId, route.token);
   }
 }
 
@@ -2579,6 +2771,8 @@ function showHome() {
   document.getElementById('homeScreen').style.display = '';
   document.getElementById('tripScreen').style.display = 'none';
   document.getElementById('newTripBtn').style.display = '';
+  const joinScreen = document.getElementById('joinScreen');
+  if (joinScreen) joinScreen.style.display = 'none';
   if (currentTripUnsub) { currentTripUnsub(); currentTripUnsub = null; }
   currentTripId = null;
   currentTrip = null;
@@ -2588,6 +2782,8 @@ function showTripDetail(tripId) {
   document.getElementById('homeScreen').style.display = 'none';
   document.getElementById('tripScreen').style.display = '';
   document.getElementById('newTripBtn').style.display = 'none';
+  const joinScreen = document.getElementById('joinScreen');
+  if (joinScreen) joinScreen.style.display = 'none';
   // 처음 진입 시 Map 탭 활성화 (이미 active면 그대로)
   setActiveTripTab('map');
   if (currentTripId === tripId && currentTrip) {
@@ -2596,6 +2792,108 @@ function showTripDetail(tripId) {
   }
   currentTripId = tripId;
   listenToTrip(tripId);
+}
+
+async function showInviteJoin(tripId, token) {
+  document.getElementById('homeScreen').style.display = 'none';
+  document.getElementById('tripScreen').style.display = 'none';
+  document.getElementById('newTripBtn').style.display = 'none';
+  if (currentTripUnsub) { currentTripUnsub(); currentTripUnsub = null; }
+
+  let joinScreen = document.getElementById('joinScreen');
+  if (!joinScreen) {
+    joinScreen = document.createElement('div');
+    joinScreen.id = 'joinScreen';
+    joinScreen.className = 'login-view';
+    document.getElementById('appView').appendChild(joinScreen);
+  }
+  joinScreen.style.display = '';
+  joinScreen.innerHTML = '<div class="join-card"><div class="loading-text">초대 확인 중…</div></div>';
+
+  try {
+    const snap = await getDoc(doc(db, 'trips', tripId));
+    if (!snap.exists()) throw new Error('이 여행을 찾을 수 없어요');
+    const trip = snap.data();
+
+    // 이미 멤버면 바로 trip으로
+    if ((trip.memberIds || []).includes(currentUser.uid)) {
+      navigate(`#/trips/${tripId}`);
+      return;
+    }
+
+    if (!trip.inviteToken) throw new Error('이 초대 링크는 만료됐어요');
+    if (trip.inviteToken !== token) throw new Error('초대 토큰이 일치하지 않아요');
+
+    // 확인 화면
+    joinScreen.innerHTML = `
+      <div class="join-card">
+        <div class="login-kicker">— invitation —</div>
+        <h2 class="join-title">${escapeHtml(trip.title || '여행')}</h2>
+        <div class="join-meta">${escapeHtml(trip.destination || '')}${trip.destination ? ' · ' : ''}${formatDateRange(trip.startDate, trip.endDate)}</div>
+        <button class="join-btn" id="joinAcceptBtn">여행에 참여하기</button>
+        <div class="login-hint" style="margin-top:18px">
+          참여하면 ${escapeHtml(currentUser.displayName || '본인')}로 멤버에 추가돼요.
+        </div>
+      </div>
+    `;
+    document.getElementById('joinAcceptBtn').addEventListener('click', () => acceptInvite(tripId, token));
+  } catch (e) {
+    joinScreen.innerHTML = `
+      <div class="join-card">
+        <h2 class="join-title">참여할 수 없어요</h2>
+        <div class="join-meta" style="color:var(--danger)">${escapeHtml(e.message)}</div>
+        <button class="join-btn" onclick="window.location.hash='#/'">홈으로</button>
+      </div>
+    `;
+  }
+}
+
+async function acceptInvite(tripId, token) {
+  const btn = document.getElementById('joinAcceptBtn');
+  btn.disabled = true;
+  btn.textContent = '참여하는 중…';
+  try {
+    // 최신 trip 다시 한 번 확인
+    const snap = await getDoc(doc(db, 'trips', tripId));
+    if (!snap.exists()) throw new Error('여행을 찾을 수 없어요');
+    const trip = snap.data();
+    if (trip.inviteToken !== token) throw new Error('초대 토큰이 더 이상 유효하지 않아요');
+    if ((trip.memberIds || []).includes(currentUser.uid)) {
+      navigate(`#/trips/${tripId}`);
+      return;
+    }
+    const newMemberIds = [...(trip.memberIds || []), currentUser.uid];
+    const newMemberInfo = {
+      ...(trip.memberInfo || {}),
+      [currentUser.uid]: {
+        displayName: currentUser.displayName || '',
+        email: currentUser.email || '',
+        photoURL: currentUser.photoURL || '',
+      }
+    };
+    await updateDoc(doc(db, 'trips', tripId), {
+      memberIds: newMemberIds,
+      memberInfo: newMemberInfo,
+      updatedAt: serverTimestamp(),
+    });
+    showToast('참여 완료!');
+    navigate(`#/trips/${tripId}`);
+  } catch (e) {
+    alert('참여 실패: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '여행에 참여하기';
+  }
+}
+
+// ===== Toast =====
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
 function listenToTrip(tripId) {
@@ -2614,6 +2912,12 @@ function listenToTrip(tripId) {
     }
     currentTrip = { id: snap.id, ...snap.data() };
     renderTripDetail(currentTrip);
+    // 설정 모달이 이 trip을 보고 있으면 같이 업데이트
+    if (settingsTrip && settingsTrip.id === currentTrip.id && tripSettingsModal.classList.contains('open')) {
+      settingsTrip = currentTrip;
+      renderMembersInModal();
+      renderInviteArea();
+    }
   }, err => {
     console.error('Trip listener error:', err);
     document.getElementById('th_title').textContent = '오류';
@@ -2727,21 +3031,169 @@ function openTripSettings(trip) {
   document.getElementById('ts_start').value = trip.startDate || '';
   document.getElementById('ts_end').value = trip.endDate || '';
 
-  // 멤버 표시 (간단)
-  const memberList = document.getElementById('ts_members');
-  const memberCount = (trip.memberIds || []).length;
-  const isOwner = trip.ownerId === currentUser.uid;
-  memberList.innerHTML = `
-    <div class="member-item">
-      <div class="member-name">${memberCount}명 · 본인이 ${isOwner ? '소유자' : '멤버'}</div>
-    </div>
-  `;
+  renderMembersInModal();
+  renderInviteArea();
 
   // 소유자만 삭제 가능
+  const isOwner = trip.ownerId === currentUser.uid;
   document.getElementById('tripDeleteBtn').style.display = isOwner ? '' : 'none';
 
   tripSettingsModal.classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function renderMembersInModal() {
+  if (!settingsTrip) return;
+  const memberIds = settingsTrip.memberIds || [];
+  const memberInfo = settingsTrip.memberInfo || {};
+  const isOwner = settingsTrip.ownerId === currentUser.uid;
+
+  document.getElementById('ts_memberCount').textContent = `· ${memberIds.length}명`;
+
+  const memberList = document.getElementById('ts_members');
+  memberList.innerHTML = memberIds.map(uid => {
+    const info = memberInfo[uid] || {};
+    const isThisOwner = uid === settingsTrip.ownerId;
+    const isSelf = uid === currentUser.uid;
+    const name = info.displayName || (isSelf ? currentUser.displayName : '익명');
+    const email = info.email || '';
+    const photo = info.photoURL || (isSelf ? currentUser.photoURL : '');
+    const canRemove = isOwner && !isThisOwner; // 소유자만 다른 멤버 제거 가능
+    return `
+      <div class="member-item">
+        ${photo
+          ? `<img class="member-avatar" src="${escapeAttr(photo)}" alt="" referrerpolicy="no-referrer">`
+          : '<div class="member-avatar"></div>'}
+        <div class="member-info">
+          <div class="member-name">${escapeHtml(name)}${isSelf ? ' (나)' : ''}</div>
+          ${email ? `<div class="member-email">${escapeHtml(email)}</div>` : ''}
+        </div>
+        <span class="member-role">${isThisOwner ? '소유자' : '멤버'}</span>
+        ${canRemove ? `<button class="member-remove" data-uid="${escapeAttr(uid)}" title="제거">×</button>` : ''}
+      </div>
+    `;
+  }).join('');
+
+  // 멤버 제거 핸들러
+  memberList.querySelectorAll('.member-remove').forEach(btn => {
+    btn.addEventListener('click', () => removeMemberFromTrip(btn.dataset.uid));
+  });
+}
+
+function renderInviteArea() {
+  if (!settingsTrip) return;
+  const area = document.getElementById('ts_inviteArea');
+  const isOwner = settingsTrip.ownerId === currentUser.uid;
+
+  if (!isOwner) {
+    area.innerHTML = '<div class="invite-hint">소유자만 초대 링크를 만들 수 있어요</div>';
+    return;
+  }
+
+  if (settingsTrip.inviteToken) {
+    const link = buildInviteLink(settingsTrip.id, settingsTrip.inviteToken);
+    area.innerHTML = `
+      <div class="invite-active">
+        <div class="invite-link-box">
+          <input class="invite-link-input" type="text" readonly value="${escapeAttr(link)}" id="inviteLinkInput">
+          <button type="button" class="invite-action-btn" id="inviteCopyBtn">복사</button>
+        </div>
+        <div class="invite-hint">
+          이 링크를 동행인에게 보내세요. 링크를 받은 사람은 Google 로그인 후 자동으로 멤버가 됩니다.
+        </div>
+        <div style="margin-top:10px">
+          <button type="button" class="invite-action-btn secondary" id="inviteRevokeBtn">링크 해제</button>
+        </div>
+      </div>
+    `;
+    document.getElementById('inviteCopyBtn').addEventListener('click', copyInviteLink);
+    document.getElementById('inviteLinkInput').addEventListener('click', e => e.target.select());
+    document.getElementById('inviteRevokeBtn').addEventListener('click', revokeInvite);
+  } else {
+    area.innerHTML = '<button type="button" class="invite-create-btn" id="inviteCreateBtn">+ 공유 링크 만들기</button>';
+    document.getElementById('inviteCreateBtn').addEventListener('click', createInvite);
+  }
+}
+
+function buildInviteLink(tripId, token) {
+  const base = window.location.origin + window.location.pathname;
+  return `${base}#/invite/${tripId}/${token}`;
+}
+
+function generateToken() {
+  // 16자 랜덤 token
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let t = '';
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < 16; i++) t += chars[arr[i] % chars.length];
+  return t;
+}
+
+async function createInvite() {
+  if (!settingsTrip) return;
+  const token = generateToken();
+  try {
+    await updateDoc(doc(db, 'trips', settingsTrip.id), {
+      inviteToken: token,
+      updatedAt: serverTimestamp(),
+    });
+    // settingsTrip은 listener가 업데이트
+    showToast('공유 링크가 만들어졌어요');
+  } catch (e) {
+    alert('링크 생성 실패: ' + e.message);
+  }
+}
+
+async function revokeInvite() {
+  if (!settingsTrip) return;
+  if (!confirm('공유 링크를 해제할까요?\n기존 링크는 더 이상 작동하지 않아요. (이미 가입한 멤버는 그대로 유지)')) return;
+  try {
+    await updateDoc(doc(db, 'trips', settingsTrip.id), {
+      inviteToken: null,
+      updatedAt: serverTimestamp(),
+    });
+    showToast('링크가 해제됐어요');
+  } catch (e) {
+    alert('해제 실패: ' + e.message);
+  }
+}
+
+function copyInviteLink() {
+  const input = document.getElementById('inviteLinkInput');
+  input.select();
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(input.value).then(() => showToast('링크가 복사됐어요'));
+    } else {
+      document.execCommand('copy');
+      showToast('링크가 복사됐어요');
+    }
+  } catch (e) {
+    // fallback: 그대로 두고 사용자가 직접 복사
+    showToast('수동으로 복사해주세요');
+  }
+}
+
+async function removeMemberFromTrip(uid) {
+  if (!settingsTrip) return;
+  if (uid === currentUser.uid) { alert('자기 자신은 제거할 수 없어요'); return; }
+  const info = (settingsTrip.memberInfo || {})[uid] || {};
+  const name = info.displayName || '이 멤버';
+  if (!confirm(`"${name}"을(를) 여행에서 제거할까요?`)) return;
+  const newMemberIds = (settingsTrip.memberIds || []).filter(x => x !== uid);
+  const newMemberInfo = { ...(settingsTrip.memberInfo || {}) };
+  delete newMemberInfo[uid];
+  try {
+    await updateDoc(doc(db, 'trips', settingsTrip.id), {
+      memberIds: newMemberIds,
+      memberInfo: newMemberInfo,
+      updatedAt: serverTimestamp(),
+    });
+    showToast(`${name} 제거됨`);
+  } catch (e) {
+    alert('제거 실패: ' + e.message);
+  }
 }
 
 function closeTripSettings() {
@@ -2797,6 +3249,14 @@ async function cloneSettingsTrip() {
       endDate: null,
       ownerId: currentUser.uid,
       memberIds: [currentUser.uid],
+      memberInfo: {
+        [currentUser.uid]: {
+          displayName: currentUser.displayName || '',
+          email: currentUser.email || '',
+          photoURL: currentUser.photoURL || '',
+        }
+      },
+      inviteToken: null,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
       data: JSON.parse(JSON.stringify(settingsTrip.data || {})), // 깊은 복제
