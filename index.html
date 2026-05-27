@@ -335,6 +335,200 @@ body {
 .fab:hover { transform: translateX(-50%) translateY(-2px); }
 .fab:active { transform: translateX(-50%) translateY(0); }
 
+/* ====== Trip Detail Header ====== */
+.trip-header {
+  display: grid;
+  grid-template-columns: 36px 1fr 36px;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 18px 12px;
+  max-width: 720px;
+  margin: 0 auto;
+  border-bottom: 1px solid var(--line);
+}
+
+.back-btn, .trip-settings-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.back-btn:hover, .trip-settings-btn:hover { border-color: var(--text); }
+
+.trip-header-info {
+  text-align: center;
+  min-width: 0;
+}
+.trip-header-meta {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  margin-bottom: 2px;
+}
+.trip-header-title {
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ====== Trip Tab Nav ====== */
+.trip-tab-nav {
+  display: flex;
+  max-width: 720px;
+  margin: 0 auto;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 14px;
+}
+.trip-tab-nav::-webkit-scrollbar { display: none; }
+
+.trip-tab-item {
+  flex: 1;
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 14px 12px;
+  border-bottom: 1px solid transparent;
+  margin-bottom: -1px;
+  white-space: nowrap;
+  transition: all 0.15s;
+  min-width: 70px;
+}
+.trip-tab-item:hover { color: var(--text); }
+.trip-tab-item.active {
+  color: var(--text);
+  border-bottom-color: var(--text);
+}
+
+/* ====== Trip Content ====== */
+.trip-content {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+}
+
+.trip-tab-content { display: none; }
+.trip-tab-content.active { display: block; }
+
+/* Placeholder block for tabs not yet implemented */
+.placeholder-block {
+  padding: 48px 32px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 4px;
+  text-align: center;
+  background: var(--surface);
+}
+.placeholder-kicker {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.placeholder-title {
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+.placeholder-body {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.placeholder-tag {
+  display: inline-block;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--soft);
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.placeholder-stat {
+  margin-top: 16px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ====== Member list (settings) ====== */
+.modal-section {
+  margin: 16px 0;
+  padding: 14px 0;
+  border-top: 1px solid var(--line);
+}
+.member-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+.member-avatar {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.member-name { flex: 1; }
+.member-role {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 2px 8px;
+  background: var(--rest-bg);
+  border-radius: 10px;
+}
+.modal-hint {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--soft);
+  margin-top: 8px;
+}
+
+.modal-delete {
+  background: none;
+  border: none;
+  color: var(--danger);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 10px 14px;
+  margin-left: auto;
+}
+
 /* ====== Modals ====== */
 .modal-backdrop {
   position: fixed;
@@ -499,22 +693,133 @@ body {
 
 <!-- App View -->
 <div class="app-view" id="appView" style="display:none">
-  <header class="app-header">
-    <h1 class="app-title">my <span class="app-title-italic">trips</span></h1>
-    <div class="user-area">
-      <img id="userAvatar" class="user-avatar" alt="" referrerpolicy="no-referrer">
-      <button class="text-btn" id="logoutBtn">로그아웃</button>
-    </div>
-  </header>
+  <!-- ===== HOME (trips list) ===== -->
+  <div id="homeScreen">
+    <header class="app-header">
+      <h1 class="app-title">my <span class="app-title-italic">trips</span></h1>
+      <div class="user-area">
+        <img id="userAvatar" class="user-avatar" alt="" referrerpolicy="no-referrer">
+        <button class="text-btn" id="logoutBtn">로그아웃</button>
+      </div>
+    </header>
 
-  <div class="trips-container" id="tripsContainer">
-    <div class="empty-state">
-      <div class="loading-text">불러오는 중…</div>
+    <div class="trips-container" id="tripsContainer">
+      <div class="empty-state">
+        <div class="loading-text">불러오는 중…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TRIP DETAIL ===== -->
+  <div id="tripScreen" style="display:none">
+    <header class="trip-header">
+      <button class="back-btn" id="backBtn" aria-label="뒤로">←</button>
+      <div class="trip-header-info">
+        <div class="trip-header-meta" id="th_meta">—</div>
+        <div class="trip-header-title" id="th_title">—</div>
+      </div>
+      <button class="trip-settings-btn" id="tripSettingsBtn" aria-label="설정">⚙</button>
+    </header>
+
+    <nav class="trip-tab-nav">
+      <a href="#" class="trip-tab-item active" data-tab="map">Map</a>
+      <a href="#" class="trip-tab-item" data-tab="plan">Plan</a>
+      <a href="#" class="trip-tab-item" data-tab="checklist">Checklist</a>
+      <a href="#" class="trip-tab-item" data-tab="budget">Budget</a>
+      <a href="#" class="trip-tab-item" data-tab="notes">Notes</a>
+    </nav>
+
+    <div class="trip-content">
+      <section class="trip-tab-content active" data-tab="map">
+        <div class="placeholder-block">
+          <div class="placeholder-kicker">map</div>
+          <div class="placeholder-title">지도와 핀</div>
+          <div class="placeholder-body">호텔, 일정 장소, 그 외 장소가 지도에 표시될 거예요. 카테고리별 색상 핀.</div>
+          <div class="placeholder-tag">다음 단계 (F3-A-3)에서 만들기</div>
+        </div>
+      </section>
+
+      <section class="trip-tab-content" data-tab="plan">
+        <div class="placeholder-block">
+          <div class="placeholder-kicker">itinerary</div>
+          <div class="placeholder-title">일정</div>
+          <div class="placeholder-body">하루별 이벤트. 탭→편집, 스와이프→삭제, 길게 눌러 드래그→순서 변경.</div>
+          <div class="placeholder-tag">다음 단계 (F3-A-2)에서 바로 만들기</div>
+          <div class="placeholder-stat" id="planStat">— events</div>
+        </div>
+      </section>
+
+      <section class="trip-tab-content" data-tab="checklist">
+        <div class="placeholder-block">
+          <div class="placeholder-kicker">checklist</div>
+          <div class="placeholder-title">체크리스트</div>
+          <div class="placeholder-body">짐 / 준비물 / 출국 전 할 일.</div>
+          <div class="placeholder-tag">F3-B에서 만들기</div>
+          <div class="placeholder-stat" id="checklistStat">— items</div>
+        </div>
+      </section>
+
+      <section class="trip-tab-content" data-tab="budget">
+        <div class="placeholder-block">
+          <div class="placeholder-kicker">budget</div>
+          <div class="placeholder-title">비용</div>
+          <div class="placeholder-body">원/현지통화 양방향, 결제수단별, 인당 계산.</div>
+          <div class="placeholder-tag">F3-B에서 만들기</div>
+          <div class="placeholder-stat" id="budgetStat">— items</div>
+        </div>
+      </section>
+
+      <section class="trip-tab-content" data-tab="notes">
+        <div class="placeholder-block">
+          <div class="placeholder-kicker">notes</div>
+          <div class="placeholder-title">번역기 · 장소 · 표현 · 노트</div>
+          <div class="placeholder-body">자주 쓰는 표현, 장소 디렉토리, 자유 노트.</div>
+          <div class="placeholder-tag">F3-B에서 만들기</div>
+        </div>
+      </section>
     </div>
   </div>
 </div>
 
 <button class="fab" id="newTripBtn" style="display:none">+ 새 여행</button>
+
+<!-- Trip Settings Modal -->
+<div class="modal-backdrop" id="tripSettingsModal" role="dialog">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">여행 설정</h3>
+      <button class="modal-close" id="tripSettingsClose">×</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="ts_title">제목</label>
+      <input class="modal-input" type="text" id="ts_title">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="ts_destination">목적지</label>
+      <input class="modal-input" type="text" id="ts_destination">
+    </div>
+    <div class="modal-row">
+      <div class="modal-field">
+        <label class="modal-label" for="ts_start">출발</label>
+        <input class="modal-input" type="date" id="ts_start">
+      </div>
+      <div class="modal-field">
+        <label class="modal-label" for="ts_end">도착</label>
+        <input class="modal-input" type="date" id="ts_end">
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-label">멤버</div>
+      <div id="ts_members" class="member-list">—</div>
+      <div class="modal-hint">멤버 초대는 F3-C에서 만들 거예요</div>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-save" id="tripSettingsSave">저장</button>
+      <button class="modal-cancel" id="tripSettingsCancel">취소</button>
+      <button class="modal-delete" id="tripDeleteBtn">여행 삭제</button>
+    </div>
+  </div>
+</div>
 
 <!-- New Trip Modal -->
 <div class="modal-backdrop" id="newTripModal" role="dialog">
@@ -555,7 +860,7 @@ import {
   onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 import {
-  getFirestore, collection, doc, addDoc, setDoc,
+  getFirestore, collection, doc, addDoc, setDoc, updateDoc, deleteDoc, getDoc,
   onSnapshot, query, where, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
@@ -617,7 +922,6 @@ function showLogin() {
 function showApp(user) {
   document.getElementById('loginView').style.display = 'none';
   document.getElementById('appView').style.display = '';
-  document.getElementById('newTripBtn').style.display = '';
   const avatar = document.getElementById('userAvatar');
   if (user.photoURL) avatar.src = user.photoURL;
   // user 문서 만들거나 업데이트
@@ -629,6 +933,8 @@ function showApp(user) {
   }, { merge: true }).catch(e => console.warn('user doc update failed', e));
   // 여행 listener 시작
   listenToTrips(user.uid);
+  // 현재 URL에 따라 화면 결정
+  applyRoute();
 }
 
 document.getElementById('googleLoginBtn').addEventListener('click', async (e) => {
@@ -720,7 +1026,7 @@ function renderTrips(trips) {
   c.querySelectorAll('.trip-card').forEach(el => {
     el.addEventListener('click', () => {
       const id = el.dataset.tripId;
-      alert(`여행 상세 화면은 다음 단계에서 만들 거예요!\n\nTrip ID: ${id}\n\n방콕 앱의 5탭(Map/Plan/Checklist/Budget/Notes)을 이쪽으로 옮겨올 예정.`);
+      navigate(`#/trips/${id}`);
     });
   });
 }
@@ -831,7 +1137,7 @@ async function createNewTrip() {
   saveBtn.textContent = '만드는 중…';
 
   try {
-    await addDoc(collection(db, 'trips'), {
+    const docRef = await addDoc(collection(db, 'trips'), {
       title,
       destination,
       startDate: startDate || null,
@@ -850,6 +1156,7 @@ async function createNewTrip() {
       }
     });
     closeNewTripModal();
+    navigate(`#/trips/${docRef.id}`);
   } catch (err) {
     console.error(err);
     alert('여행 생성 실패: ' + err.message);
@@ -858,6 +1165,228 @@ async function createNewTrip() {
     saveBtn.textContent = '만들기';
   }
 }
+
+// ===== Routing =====
+// Routes:
+//   #/ or empty → home (trips list)
+//   #/trips → home
+//   #/trips/{id} → trip detail
+let currentRoute = null;
+let currentTripUnsub = null;
+let currentTripId = null;
+let currentTrip = null;
+let activeTripTab = 'map';
+
+function parseRoute() {
+  const hash = window.location.hash || '#/';
+  if (hash === '#/' || hash === '#' || hash === '' || hash === '#/trips') {
+    return { name: 'home' };
+  }
+  const m = hash.match(/^#\/trips\/([\w-]+)$/);
+  if (m) return { name: 'trip', tripId: m[1] };
+  return { name: 'home' };
+}
+
+function navigate(hash) {
+  if (window.location.hash === hash) return;
+  window.location.hash = hash;
+}
+
+window.addEventListener('hashchange', applyRoute);
+
+function applyRoute() {
+  if (!currentUser) return; // auth가 처리
+  const route = parseRoute();
+  currentRoute = route;
+  if (route.name === 'home') {
+    showHome();
+  } else if (route.name === 'trip') {
+    showTripDetail(route.tripId);
+  }
+}
+
+function showHome() {
+  document.getElementById('homeScreen').style.display = '';
+  document.getElementById('tripScreen').style.display = 'none';
+  document.getElementById('newTripBtn').style.display = '';
+  if (currentTripUnsub) { currentTripUnsub(); currentTripUnsub = null; }
+  currentTripId = null;
+  currentTrip = null;
+}
+
+function showTripDetail(tripId) {
+  document.getElementById('homeScreen').style.display = 'none';
+  document.getElementById('tripScreen').style.display = '';
+  document.getElementById('newTripBtn').style.display = 'none';
+  if (currentTripId === tripId && currentTrip) {
+    renderTripDetail(currentTrip);
+    return;
+  }
+  currentTripId = tripId;
+  listenToTrip(tripId);
+}
+
+function listenToTrip(tripId) {
+  if (currentTripUnsub) currentTripUnsub();
+
+  // Header 임시
+  document.getElementById('th_title').textContent = '불러오는 중…';
+  document.getElementById('th_meta').textContent = '';
+
+  currentTripUnsub = onSnapshot(doc(db, 'trips', tripId), snap => {
+    if (!snap.exists()) {
+      alert('여행을 찾을 수 없거나 권한이 없어요');
+      navigate('#/');
+      return;
+    }
+    currentTrip = { id: snap.id, ...snap.data() };
+    renderTripDetail(currentTrip);
+  }, err => {
+    console.error('Trip listener error:', err);
+    document.getElementById('th_title').textContent = '오류';
+    document.getElementById('th_meta').textContent = err.message;
+  });
+}
+
+function renderTripDetail(trip) {
+  // 헤더
+  document.getElementById('th_title').textContent = trip.title || '제목 없음';
+  const meta = [];
+  if (trip.destination) meta.push(trip.destination);
+  if (trip.startDate) meta.push(formatDateRange(trip.startDate, trip.endDate));
+  document.getElementById('th_meta').textContent = meta.join(' · ') || '날짜 미정';
+
+  // 탭 stats
+  const d = trip.data || {};
+  const planCount = (d.plan || []).reduce((s, day) => s + (day.events ? day.events.length : 0), 0);
+  const placeCount = (d.places || []).length;
+  const checkCount = (d.checklist || []).length;
+  const budgetCount = (d.budget || []).length;
+
+  const planStat = document.getElementById('planStat');
+  if (planStat) planStat.textContent = `${planCount} events · ${placeCount} places`;
+  const checkStat = document.getElementById('checklistStat');
+  if (checkStat) checkStat.textContent = `${checkCount} items`;
+  const budgetStat = document.getElementById('budgetStat');
+  if (budgetStat) budgetStat.textContent = `${budgetCount} items`;
+}
+
+// Trip tab navigation
+document.querySelectorAll('.trip-tab-item').forEach(el => {
+  el.addEventListener('click', e => {
+    e.preventDefault();
+    const tab = el.dataset.tab;
+    setActiveTripTab(tab);
+  });
+});
+
+function setActiveTripTab(tab) {
+  activeTripTab = tab;
+  document.querySelectorAll('.trip-tab-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+  document.querySelectorAll('.trip-tab-content').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab);
+  });
+}
+
+// Back button
+document.getElementById('backBtn').addEventListener('click', () => navigate('#/'));
+
+// ===== Trip Settings Modal =====
+const tripSettingsModal = document.getElementById('tripSettingsModal');
+document.getElementById('tripSettingsBtn').addEventListener('click', openTripSettings);
+document.getElementById('tripSettingsClose').addEventListener('click', closeTripSettings);
+document.getElementById('tripSettingsCancel').addEventListener('click', closeTripSettings);
+document.getElementById('tripSettingsSave').addEventListener('click', saveTripSettings);
+document.getElementById('tripDeleteBtn').addEventListener('click', deleteCurrentTrip);
+tripSettingsModal.addEventListener('click', e => { if (e.target === tripSettingsModal) closeTripSettings(); });
+
+function openTripSettings() {
+  if (!currentTrip) return;
+  document.getElementById('ts_title').value = currentTrip.title || '';
+  document.getElementById('ts_destination').value = currentTrip.destination || '';
+  document.getElementById('ts_start').value = currentTrip.startDate || '';
+  document.getElementById('ts_end').value = currentTrip.endDate || '';
+
+  // 멤버 표시 (간단)
+  const memberList = document.getElementById('ts_members');
+  const memberCount = (currentTrip.memberIds || []).length;
+  const isOwner = currentTrip.ownerId === currentUser.uid;
+  memberList.innerHTML = `
+    <div class="member-item">
+      <div class="member-name">${memberCount}명 · 본인이 ${isOwner ? '소유자' : '멤버'}</div>
+    </div>
+  `;
+
+  // 소유자만 삭제 가능
+  document.getElementById('tripDeleteBtn').style.display = isOwner ? '' : 'none';
+
+  tripSettingsModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTripSettings() {
+  tripSettingsModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function saveTripSettings() {
+  if (!currentTrip) return;
+  const title = document.getElementById('ts_title').value.trim();
+  const destination = document.getElementById('ts_destination').value.trim();
+  const startDate = document.getElementById('ts_start').value || null;
+  const endDate = document.getElementById('ts_end').value || null;
+
+  if (!title) { alert('제목을 입력해주세요'); return; }
+  if (startDate && endDate && endDate < startDate) {
+    alert('도착이 출발보다 빠를 수 없어요'); return;
+  }
+
+  const btn = document.getElementById('tripSettingsSave');
+  btn.disabled = true;
+  btn.textContent = '저장 중…';
+  try {
+    await updateDoc(doc(db, 'trips', currentTrip.id), {
+      title, destination, startDate, endDate,
+      updatedAt: serverTimestamp(),
+    });
+    closeTripSettings();
+  } catch (e) {
+    alert('저장 실패: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '저장';
+  }
+}
+
+async function deleteCurrentTrip() {
+  if (!currentTrip) return;
+  if (currentTrip.ownerId !== currentUser.uid) {
+    alert('소유자만 삭제할 수 있어요'); return;
+  }
+  const confirmText = prompt(`정말 "${currentTrip.title}"을(를) 삭제할까요?\n모든 데이터가 사라집니다.\n\n확인하려면 여행 제목을 입력해주세요:`);
+  if (confirmText !== currentTrip.title) {
+    if (confirmText !== null) alert('제목이 다릅니다. 취소합니다.');
+    return;
+  }
+  try {
+    await deleteDoc(doc(db, 'trips', currentTrip.id));
+    closeTripSettings();
+    navigate('#/');
+  } catch (e) {
+    alert('삭제 실패: ' + e.message);
+  }
+}
+
+// ===== Trip data update helper (다음 단계에서 사용) =====
+async function updateTripData(updates) {
+  if (!currentTrip) throw new Error('No current trip');
+  const payload = { ...updates, updatedAt: serverTimestamp() };
+  await updateDoc(doc(db, 'trips', currentTrip.id), payload);
+}
+// 전역에 노출 (다음 단계에서 사용)
+window._tripAPI = { updateTripData };
 
 // ===== Utility =====
 function escapeHtml(str) {
