@@ -3138,7 +3138,9 @@ async function createInvite() {
       inviteToken: token,
       updatedAt: serverTimestamp(),
     });
-    // settingsTrip은 listener가 업데이트
+    // 즉시 로컬 업데이트 (listener 기다리지 않고)
+    settingsTrip = { ...settingsTrip, inviteToken: token };
+    renderInviteArea();
     showToast('공유 링크가 만들어졌어요');
   } catch (e) {
     alert('링크 생성 실패: ' + e.message);
@@ -3153,6 +3155,9 @@ async function revokeInvite() {
       inviteToken: null,
       updatedAt: serverTimestamp(),
     });
+    // 즉시 로컬 업데이트
+    settingsTrip = { ...settingsTrip, inviteToken: null };
+    renderInviteArea();
     showToast('링크가 해제됐어요');
   } catch (e) {
     alert('해제 실패: ' + e.message);
