@@ -1269,6 +1269,127 @@ body {
   border-color: var(--text);
 }
 
+/* ====== Places Directory (Notes) ====== */
+.dir-group { margin-bottom: 32px; }
+.dir-group-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 18px;
+  color: var(--text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.dir-group-count {
+  font-style: normal;
+  font-size: 11px;
+  color: var(--soft);
+  letter-spacing: 0.05em;
+}
+
+.dir-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text);
+  transition: opacity 0.15s;
+}
+.dir-item:hover { opacity: 0.7; }
+.dir-item:last-child { border-bottom: none; }
+.dir-item-info { flex: 1; min-width: 0; }
+.dir-item-name {
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+.dir-item-note {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.dir-item-arrow {
+  color: var(--soft);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 14px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+a.dir-item-arrow:hover { color: var(--text); }
+
+.add-place-btn, .add-tip-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 13px;
+  background: none;
+  border: 1px dashed var(--line-strong);
+  color: var(--muted);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+.add-place-btn:hover, .add-tip-btn:hover {
+  border-color: var(--text);
+  color: var(--text);
+  background: var(--rest-bg);
+}
+
+.places-empty {
+  padding: 20px 0;
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--soft);
+  font-size: 13px;
+}
+
+/* ====== Tips (Notes) ====== */
+.tip {
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.tip:last-child { border-bottom: none; }
+.tip:hover { opacity: 0.7; }
+.tip-label {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+.tip-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.footer-mark {
+  margin-top: 64px;
+  text-align: center;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--soft);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  padding: 24px 0;
+}
+
 .plan-empty {
   padding: 60px 20px;
   text-align: center;
@@ -1819,13 +1940,19 @@ body {
         </div>
 
         <div style="margin-top: 56px">
-          <div class="placeholder-block">
-            <div class="placeholder-kicker">directory & tips</div>
-            <div class="placeholder-title">장소 디렉토리 · 노트</div>
-            <div class="placeholder-body">in-plan / other places / 자유 노트.</div>
-            <div class="placeholder-tag">다음 단계 (F3-B-3-b)에서 만들기</div>
-          </div>
+          <div class="section-label">directory</div>
+          <h2 class="section-title">places</h2>
+          <div id="placesContainer"></div>
         </div>
+
+        <div style="margin-top: 56px">
+          <div class="section-label">notes</div>
+          <h2 class="section-title">small things</h2>
+          <div id="tipsContainer"></div>
+          <button class="add-tip-btn" type="button" id="addTipBtn">+ 노트 추가</button>
+        </div>
+
+        <div class="footer-mark">travel well, come back rested.</div>
       </section>
     </div>
   </div>
@@ -1966,6 +2093,70 @@ body {
     <div class="modal-buttons">
       <button class="modal-save" id="newTripSave">만들기</button>
       <button class="modal-cancel" id="newTripCancel">취소</button>
+    </div>
+  </div>
+</div>
+
+<!-- Place Modal -->
+<div class="modal-backdrop" id="placeModal" role="dialog">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="placeModalTitle">장소 편집</h3>
+      <button class="modal-close" id="placeModalClose">×</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="pl_name">이름</label>
+      <input class="modal-input" type="text" id="pl_name" placeholder="예: Patom Organic Living">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="pl_note">메모 (선택)</label>
+      <textarea class="modal-input modal-textarea" id="pl_note" rows="2"></textarea>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="pl_url">구글맵 URL (선택)</label>
+      <input class="modal-input" type="url" id="pl_url" placeholder="https://www.google.com/maps/...">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="pl_cat">카테고리</label>
+      <select class="modal-input" id="pl_cat">
+        <option value="">— 없음 —</option>
+        <option value="hotel">호텔</option>
+        <option value="cafe">카페</option>
+        <option value="bar">바·재즈</option>
+        <option value="food">맛집</option>
+        <option value="market">시장·쇼핑</option>
+        <option value="massage">마사지</option>
+        <option value="activity">활동</option>
+        <option value="transport">이동</option>
+      </select>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-save" id="placeModalSave">저장</button>
+      <button class="modal-cancel" id="placeModalCancel">취소</button>
+      <button class="modal-delete" id="placeModalDelete">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tip Modal -->
+<div class="modal-backdrop" id="tipModal" role="dialog">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title" id="tipModalTitle">노트 편집</h3>
+      <button class="modal-close" id="tipModalClose">×</button>
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="tp_label">라벨</label>
+      <input class="modal-input" type="text" id="tp_label" placeholder="예: on heat —">
+    </div>
+    <div class="modal-field">
+      <label class="modal-label" for="tp_body">내용</label>
+      <textarea class="modal-input modal-textarea" id="tp_body" rows="3"></textarea>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-save" id="tipModalSave">저장</button>
+      <button class="modal-cancel" id="tipModalCancel">취소</button>
+      <button class="modal-delete" id="tipModalDelete">삭제</button>
     </div>
   </div>
 </div>
@@ -2399,6 +2590,9 @@ function renderTripDetail(trip) {
   renderBudget(d.budget || []);
   // Notes 탭 — Phrases (통화 바뀌면 자동으로 언어 바뀜)
   renderPhrases();
+  // Notes 탭 — Places + Tips
+  renderPlacesDirectory();
+  renderTips();
   // Map 탭 마커 (활성이면 즉시, 아니면 다음 활성화 시)
   if (activeTripTab === 'map' && leafletMap) {
     renderMapMarkers();
@@ -2606,7 +2800,7 @@ const PHRASE_KEYS = [
   { ko: '여기서 내려주세요' },
   { ko: '화장실 어디예요?' },
   { ko: '물 한 잔 주세요' },
-  { ko: '아이스 없이요' },
+  { ko: '차가운 물 있나요?' },
   { ko: '맛있어요' },
   { ko: '괜찮아요' },
 ];
@@ -2622,7 +2816,7 @@ const PHRASE_PACKS = {
     { local: 'ลงตรงนี้ค่ะ / ครับ', roman: 'long trong nee kha / khrap' },
     { local: 'ห้องน้ำอยู่ที่ไหน', roman: 'hong-nam yu thee nai' },
     { local: 'ขอน้ำเปล่าหนึ่งแก้ว', roman: 'kho nam-plao neung kaeo' },
-    { local: 'ไม่ใส่น้ำแข็ง', roman: 'mai-sai nam-khaeng' },
+    { local: 'มีน้ำเย็นไหม', roman: 'mee nam-yen mai' },
     { local: 'อร่อย', roman: 'a-roi' },
     { local: 'ไม่เป็นไร', roman: 'mai-pen-rai' },
   ],
@@ -2636,7 +2830,7 @@ const PHRASE_PACKS = {
     { local: 'ここで降ろしてください', roman: 'koko de oroshite kudasai' },
     { local: 'トイレはどこですか', roman: 'toire wa doko desu ka' },
     { local: 'お水をください', roman: 'o-mizu o kudasai' },
-    { local: '氷なしで', roman: 'kōri nashi de' },
+    { local: '冷たい水ありますか', roman: 'tsumetai mizu arimasu ka' },
     { local: '美味しい', roman: 'oishii' },
     { local: '大丈夫', roman: 'daijōbu' },
   ],
@@ -2650,7 +2844,7 @@ const PHRASE_PACKS = {
     { local: 'Cho tôi xuống đây', roman: 'cho toi xuong day' },
     { local: 'Nhà vệ sinh ở đâu?', roman: 'nha ve sin uh dow' },
     { local: 'Cho tôi một ly nước', roman: 'cho toi mot ly nuok' },
-    { local: 'Không đá', roman: 'khong da' },
+    { local: 'Có nước lạnh không?', roman: 'co nuok lanh khong' },
     { local: 'Ngon', roman: 'ngon' },
     { local: 'Không sao', roman: 'khong sao' },
   ],
@@ -2664,7 +2858,7 @@ const PHRASE_PACKS = {
     { local: '我在这里下车', roman: 'wǒ zài zhè lǐ xià chē' },
     { local: '洗手间在哪里', roman: 'xǐ shǒu jiān zài nǎ lǐ' },
     { local: '请给我一杯水', roman: 'qǐng gěi wǒ yì bēi shuǐ' },
-    { local: '不要冰', roman: 'bú yào bīng' },
+    { local: '有冰水吗?', roman: 'yǒu bīng shuǐ ma' },
     { local: '好吃', roman: 'hǎo chī' },
     { local: '没关系', roman: 'méi guān xi' },
   ],
@@ -2678,7 +2872,7 @@ const PHRASE_PACKS = {
     { local: '我在這裡下車', roman: 'wǒ zài zhè lǐ xià chē' },
     { local: '洗手間在哪裡', roman: 'xǐ shǒu jiān zài nǎ lǐ' },
     { local: '請給我一杯水', roman: 'qǐng gěi wǒ yì bēi shuǐ' },
-    { local: '不要冰', roman: 'bú yào bīng' },
+    { local: '有冰水嗎?', roman: 'yǒu bīng shuǐ ma' },
     { local: '好吃', roman: 'hǎo chī' },
     { local: '沒關係', roman: 'méi guān xi' },
   ],
@@ -2692,7 +2886,7 @@ const PHRASE_PACKS = {
     { local: 'Saya turun di sini', roman: 'sa-ya tu-run di si-ni' },
     { local: 'Di mana toilet?', roman: 'di ma-na toi-let' },
     { local: 'Tolong segelas air', roman: 'to-long se-ge-las a-ir' },
-    { local: 'Tanpa es', roman: 'tan-pa es' },
+    { local: 'Ada air dingin?', roman: 'a-da a-ir din-gin' },
     { local: 'Enak', roman: 'e-nak' },
     { local: 'Tidak apa-apa', roman: 'ti-dak a-pa a-pa' },
   ],
@@ -2706,7 +2900,7 @@ const PHRASE_PACKS = {
     { local: 'Saya turun di sini', roman: 'sa-ya tu-run di si-ni' },
     { local: 'Di mana tandas?', roman: 'di ma-na tan-das' },
     { local: 'Tolong segelas air', roman: 'to-long se-ge-las a-ir' },
-    { local: 'Tanpa ais', roman: 'tan-pa a-is' },
+    { local: 'Ada air sejuk?', roman: 'a-da a-ir se-juk' },
     { local: 'Sedap', roman: 'se-dap' },
     { local: 'Tidak apa', roman: 'ti-dak a-pa' },
   ],
@@ -2720,7 +2914,7 @@ const PHRASE_PACKS = {
     { local: 'Para po dito', roman: 'pah-rah po dee-toh' },
     { local: 'Nasaan ang banyo?', roman: 'nah-sah-an ang bahn-yo' },
     { local: 'Isang basong tubig', roman: 'ee-sang bah-song too-big' },
-    { local: 'Walang yelo', roman: 'wah-lang yeh-lo' },
+    { local: 'May malamig na tubig?', roman: 'may mah-lah-mig nah too-big' },
     { local: 'Masarap', roman: 'mah-sah-rahp' },
     { local: 'Okay lang', roman: 'oh-key lang' },
   ],
@@ -2734,7 +2928,7 @@ const PHRASE_PACKS = {
     { local: 'Je descends ici', roman: 'zhuh deh-son ee-see' },
     { local: 'Où sont les toilettes?', roman: 'oo son lay twah-let' },
     { local: 'Un verre d\'eau s\'il vous plaît', roman: 'an vehr doh seel voo pleh' },
-    { local: 'Sans glace', roman: 'son glas' },
+    { local: 'Avez-vous de l\'eau froide?', roman: 'ah-vay voo duh loh frwahd' },
     { local: 'Délicieux', roman: 'day-lee-syuh' },
     { local: "Ça va", roman: 'sah vah' },
   ],
@@ -2748,7 +2942,7 @@ const PHRASE_PACKS = {
     { local: 'Aquí, por favor', roman: 'ah-kee por fah-vor' },
     { local: '¿Dónde está el baño?', roman: 'don-deh es-tah el bahn-yo' },
     { local: 'Un vaso de agua', roman: 'oon vah-so deh ah-gwah' },
-    { local: 'Sin hielo', roman: 'seen yeh-loh' },
+    { local: '¿Tiene agua fría?', roman: 'tyeh-neh ah-gwah free-ah' },
     { local: 'Delicioso', roman: 'deh-lee-syoh-soh' },
     { local: 'Está bien', roman: 'es-tah bee-en' },
   ],
@@ -2762,7 +2956,7 @@ const PHRASE_PACKS = {
     { local: 'Scendo qui', roman: 'shen-doh kwee' },
     { local: 'Dov\'è il bagno?', roman: 'doh-veh eel bahn-yo' },
     { local: 'Un bicchiere d\'acqua', roman: 'oon bee-kyeh-reh dah-kwah' },
-    { local: 'Senza ghiaccio', roman: 'sen-tsah gee-ah-cho' },
+    { local: 'Avete acqua fredda?', roman: 'ah-veh-teh ah-kwah fred-dah' },
     { local: 'Delizioso', roman: 'deh-lee-tsyoh-soh' },
     { local: 'Va bene', roman: 'vah beh-neh' },
   ],
@@ -2776,7 +2970,7 @@ const PHRASE_PACKS = {
     { local: 'Hier bitte', roman: 'heer bit-eh' },
     { local: 'Wo ist die Toilette?', roman: 'voh ist dee toy-let-eh' },
     { local: 'Ein Glas Wasser', roman: 'ain glahs vas-er' },
-    { local: 'Ohne Eis', roman: 'oh-neh ais' },
+    { local: 'Haben Sie kaltes Wasser?', roman: 'hah-ben zee kal-tes vas-er' },
     { local: 'Lecker', roman: 'lek-er' },
     { local: 'Alles gut', roman: 'al-es goot' },
   ],
@@ -2790,7 +2984,7 @@ const PHRASE_PACKS = {
     { local: 'Please drop me here', roman: '' },
     { local: 'Where is the bathroom?', roman: '' },
     { local: 'A glass of water please', roman: '' },
-    { local: 'No ice', roman: '' },
+    { local: 'Do you have cold water?', roman: '' },
     { local: 'Delicious', roman: '' },
     { local: "It's okay", roman: '' },
   ],
@@ -3009,6 +3203,261 @@ function openGoogleTranslate(useCamera) {
 }
 document.getElementById('openGoogleCam').addEventListener('click', () => openGoogleTranslate(true));
 document.getElementById('openGoogleFull').addEventListener('click', () => openGoogleTranslate(false));
+
+// ===== Places Directory =====
+function clonePlaces() {
+  return JSON.parse(JSON.stringify((currentTrip && currentTrip.data && currentTrip.data.places) || []));
+}
+async function savePlaces(items) {
+  await updateTripData({ 'data.places': items });
+}
+
+function renderPlacesDirectory() {
+  const c = document.getElementById('placesContainer');
+  if (!c) return;
+
+  // in-plan: PLAN의 url 또는 좌표 있는 이벤트
+  const planned = [];
+  if (currentTrip && currentTrip.data && currentTrip.data.plan) {
+    currentTrip.data.plan.forEach((day, dayIdx) => {
+      (day.events || []).forEach(ev => {
+        if (!ev.url && (ev.lat == null || ev.lng == null)) return;
+        planned.push({
+          ...ev,
+          dayIdx,
+          dayLabel: String(dayIdx + 1).padStart(2, '0'),
+        });
+      });
+    });
+  }
+
+  const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
+
+  c.innerHTML = `
+    <div class="dir-group">
+      <div class="dir-group-title">in plan <span class="dir-group-count">${planned.length}</span></div>
+      ${planned.length
+        ? planned.map(p => renderPlannedItem(p)).join('')
+        : '<div class="places-empty">아직 URL/좌표가 있는 이벤트가 없어요</div>'}
+    </div>
+    <div class="dir-group">
+      <div class="dir-group-title">other places <span class="dir-group-count">${places.length}</span></div>
+      ${places.map(p => renderUnplannedItem(p)).join('')}
+      <button class="add-place-btn" type="button" id="addPlaceBtn">+ 장소 추가</button>
+    </div>
+  `;
+
+  c.querySelectorAll('.unplanned-item').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('a')) return;
+      openPlaceModal(el.dataset.placeId);
+    });
+  });
+  const addBtn = document.getElementById('addPlaceBtn');
+  if (addBtn) addBtn.addEventListener('click', () => openPlaceModal(null));
+}
+
+function renderPlannedItem(p) {
+  const cat = p.cat && CATEGORIES[p.cat];
+  const url = getMapUrl(p);
+  return `
+    <a href="${escapeAttr(url)}" target="_blank" rel="noopener" class="dir-item">
+      <div class="dir-item-info">
+        <div class="dir-item-name">${escapeHtml(p.name || '')}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
+        <div class="dir-item-note">Day ${escapeHtml(p.dayLabel)}${p.time ? ' · ' + escapeHtml(p.time) : ''}</div>
+      </div>
+      <span class="dir-item-arrow">→</span>
+    </a>
+  `;
+}
+
+function renderUnplannedItem(p) {
+  const cat = p.cat && CATEGORIES[p.cat];
+  const hasTarget = p.url || (p.lat != null && p.lng != null);
+  return `
+    <div class="dir-item unplanned-item" data-place-id="${escapeAttr(p.id)}">
+      <div class="dir-item-info">
+        <div class="dir-item-name">${escapeHtml(p.name || '')}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
+        ${p.note ? `<div class="dir-item-note">${escapeHtml(p.note)}</div>` : ''}
+      </div>
+      ${hasTarget
+        ? `<a href="${escapeAttr(getMapUrl(p))}" target="_blank" rel="noopener" class="dir-item-arrow" onclick="event.stopPropagation()">→</a>`
+        : '<span class="dir-item-arrow">···</span>'}
+    </div>
+  `;
+}
+
+// ===== Place Modal =====
+let placeModalCtx = { mode: null, placeId: null };
+const placeModal = document.getElementById('placeModal');
+
+function openPlaceModal(placeId) {
+  const places = clonePlaces();
+  if (placeId) {
+    const place = places.find(p => p.id === placeId);
+    if (!place) return;
+    placeModalCtx = { mode: 'edit', placeId };
+    document.getElementById('placeModalTitle').textContent = '장소 편집';
+    document.getElementById('pl_name').value = place.name || '';
+    document.getElementById('pl_note').value = place.note || '';
+    document.getElementById('pl_url').value = place.url || '';
+    document.getElementById('pl_cat').value = place.cat || '';
+    document.getElementById('placeModalDelete').style.display = '';
+  } else {
+    placeModalCtx = { mode: 'add', placeId: null };
+    document.getElementById('placeModalTitle').textContent = '새 장소';
+    document.getElementById('pl_name').value = '';
+    document.getElementById('pl_note').value = '';
+    document.getElementById('pl_url').value = '';
+    document.getElementById('pl_cat').value = '';
+    document.getElementById('placeModalDelete').style.display = 'none';
+  }
+  placeModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('pl_name').focus(), 80);
+}
+function closePlaceModal() { placeModal.classList.remove('open'); document.body.style.overflow = ''; }
+
+async function savePlaceFromModal() {
+  const name = document.getElementById('pl_name').value.trim();
+  if (!name) { alert('이름을 입력해주세요'); return; }
+  const url = document.getElementById('pl_url').value.trim();
+  let lat = null, lng = null;
+  if (url) {
+    const m = url.match(/@(-?\d+\.?\d*),(-?\d+\.?\d*)/);
+    if (m) { lat = parseFloat(m[1]); lng = parseFloat(m[2]); }
+  }
+  const data = {
+    name,
+    note: document.getElementById('pl_note').value.trim(),
+    url,
+    cat: document.getElementById('pl_cat').value,
+    lat, lng,
+  };
+  const places = clonePlaces();
+  if (placeModalCtx.mode === 'edit') {
+    const existing = places.find(p => p.id === placeModalCtx.placeId);
+    if (!existing) return;
+    if (data.lat == null && existing.url === data.url) {
+      data.lat = existing.lat;
+      data.lng = existing.lng;
+    }
+    Object.assign(existing, data);
+  } else {
+    places.push({ id: 'p' + Date.now(), ...data });
+  }
+  try {
+    await savePlaces(places);
+    closePlaceModal();
+  } catch (e) {
+    alert('저장 실패: ' + e.message);
+  }
+}
+async function deletePlaceFromModal() {
+  if (placeModalCtx.mode !== 'edit') return;
+  if (!confirm('이 장소 삭제할까요?')) return;
+  const places = clonePlaces().filter(p => p.id !== placeModalCtx.placeId);
+  try {
+    await savePlaces(places);
+    closePlaceModal();
+  } catch (e) {
+    alert('삭제 실패: ' + e.message);
+  }
+}
+document.getElementById('placeModalClose').addEventListener('click', closePlaceModal);
+document.getElementById('placeModalCancel').addEventListener('click', closePlaceModal);
+document.getElementById('placeModalSave').addEventListener('click', savePlaceFromModal);
+document.getElementById('placeModalDelete').addEventListener('click', deletePlaceFromModal);
+placeModal.addEventListener('click', e => { if (e.target === placeModal) closePlaceModal(); });
+
+// ===== Tips =====
+function cloneTips() {
+  return JSON.parse(JSON.stringify((currentTrip && currentTrip.data && currentTrip.data.tips) || []));
+}
+async function saveTips(items) {
+  await updateTripData({ 'data.tips': items });
+}
+
+function renderTips() {
+  const c = document.getElementById('tipsContainer');
+  if (!c) return;
+  const tips = (currentTrip && currentTrip.data && currentTrip.data.tips) || [];
+  if (tips.length === 0) {
+    c.innerHTML = '<div class="places-empty">노트가 없어요. 아래 + 노트 추가</div>';
+    return;
+  }
+  c.innerHTML = tips.map(t => `
+    <div class="tip" data-tip-id="${escapeAttr(t.id)}">
+      ${t.label ? `<div class="tip-label">${escapeHtml(t.label)}</div>` : ''}
+      <div class="tip-body">${escapeHtml(t.body)}</div>
+    </div>
+  `).join('');
+  c.querySelectorAll('.tip').forEach(el => {
+    el.addEventListener('click', () => openTipModal(el.dataset.tipId));
+  });
+}
+
+let tipModalCtx = { mode: null, tipId: null };
+const tipModal = document.getElementById('tipModal');
+
+function openTipModal(tipId) {
+  const tips = cloneTips();
+  if (tipId) {
+    const t = tips.find(x => x.id === tipId);
+    if (!t) return;
+    tipModalCtx = { mode: 'edit', tipId };
+    document.getElementById('tipModalTitle').textContent = '노트 편집';
+    document.getElementById('tp_label').value = t.label || '';
+    document.getElementById('tp_body').value = t.body || '';
+    document.getElementById('tipModalDelete').style.display = '';
+  } else {
+    tipModalCtx = { mode: 'add', tipId: null };
+    document.getElementById('tipModalTitle').textContent = '새 노트';
+    document.getElementById('tp_label').value = '';
+    document.getElementById('tp_body').value = '';
+    document.getElementById('tipModalDelete').style.display = 'none';
+  }
+  tipModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('tp_label').focus(), 80);
+}
+function closeTipModal() { tipModal.classList.remove('open'); document.body.style.overflow = ''; }
+
+async function saveTipFromModal() {
+  const label = document.getElementById('tp_label').value.trim();
+  const body = document.getElementById('tp_body').value.trim();
+  if (!label && !body) { alert('내용을 입력해주세요'); return; }
+  const tips = cloneTips();
+  if (tipModalCtx.mode === 'edit') {
+    const t = tips.find(x => x.id === tipModalCtx.tipId);
+    if (t) { t.label = label; t.body = body; }
+  } else {
+    tips.push({ id: 'tp' + Date.now(), label, body });
+  }
+  try {
+    await saveTips(tips);
+    closeTipModal();
+  } catch (e) {
+    alert('저장 실패: ' + e.message);
+  }
+}
+async function deleteTipFromModal() {
+  if (tipModalCtx.mode !== 'edit') return;
+  if (!confirm('이 노트 삭제할까요?')) return;
+  const tips = cloneTips().filter(x => x.id !== tipModalCtx.tipId);
+  try {
+    await saveTips(tips);
+    closeTipModal();
+  } catch (e) {
+    alert('삭제 실패: ' + e.message);
+  }
+}
+document.getElementById('tipModalClose').addEventListener('click', closeTipModal);
+document.getElementById('tipModalCancel').addEventListener('click', closeTipModal);
+document.getElementById('tipModalSave').addEventListener('click', saveTipFromModal);
+document.getElementById('tipModalDelete').addEventListener('click', deleteTipFromModal);
+tipModal.addEventListener('click', e => { if (e.target === tipModal) closeTipModal(); });
+document.getElementById('addTipBtn').addEventListener('click', () => openTipModal(null));
 
 // ===== Budget Tab =====
 const CURRENCIES = {
