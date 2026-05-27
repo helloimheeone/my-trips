@@ -12,6 +12,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..500&family=IBM+Plex+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" defer></script>
 <link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="80" fill="%23fafaf7"/><text x="256" y="340" font-family="serif" font-size="280" text-anchor="middle" fill="%231a1a1a" font-weight="300" font-style="italic">mt</text></svg>'>
 <style>
@@ -503,7 +505,124 @@ body {
   color: var(--muted);
 }
 
-/* ====== Plan Tab ====== */
+/* ====== Map Tab ====== */
+.map-frame {
+  position: relative;
+  width: 100%;
+  height: 480px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--rest-bg);
+}
+@media (max-width: 480px) {
+  .map-frame { height: 420px; }
+}
+
+#leafletMap { width: 100%; height: 100%; background: var(--bg); }
+
+.map-empty {
+  padding: 24px 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 13px;
+}
+.map-empty .muted { color: var(--soft); font-style: italic; font-family: 'Fraunces', serif; font-size: 12px; margin-top: 4px; }
+
+.map-locate-btn {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 401;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  transition: all 0.15s;
+}
+.map-locate-btn:hover { border-color: var(--text); }
+.map-locate-btn.loading { animation: pulse 1.2s ease-in-out infinite; }
+.map-hotel-btn { bottom: 56px; }
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.user-location-marker {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 3px solid white;
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.25);
+}
+
+.custom-pin-wrap {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.map-legend {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 401;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  max-width: calc(100% - 24px);
+  font-size: 11px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted);
+}
+.legend-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+}
+
+.pop-name {
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+.pop-cat {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.pop-note {
+  font-size: 12px;
+  color: var(--text);
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+.pop-link {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line-strong);
+}
+.pop-link:hover { border-bottom-color: var(--text); }
+
+[data-theme="dark"] .leaflet-tile-pane { filter: brightness(0.85) contrast(0.95); }
 .plan-empty {
   padding: 60px 20px;
   text-align: center;
@@ -947,11 +1066,15 @@ body {
 
     <div class="trip-content">
       <section class="trip-tab-content active" data-tab="map">
-        <div class="placeholder-block">
-          <div class="placeholder-kicker">map</div>
-          <div class="placeholder-title">지도와 핀</div>
-          <div class="placeholder-body">호텔, 일정 장소, 그 외 장소가 지도에 표시될 거예요. 카테고리별 색상 핀.</div>
-          <div class="placeholder-tag">다음 단계 (F3-A-3)에서 만들기</div>
+        <div class="map-empty" id="mapEmpty" style="display:none">
+          <p>아직 좌표가 있는 장소가 없어요.</p>
+          <p class="muted">Plan 탭에서 이벤트에 구글맵 URL을 추가하면 핀이 표시돼요.</p>
+        </div>
+        <div class="map-frame">
+          <div id="leafletMap"></div>
+          <button class="map-locate-btn map-hotel-btn" id="hotelBtn" title="호텔 위치" style="display:none">🏨</button>
+          <button class="map-locate-btn" id="locateBtn" title="내 위치">📍</button>
+          <div class="map-legend" id="mapLegend"></div>
         </div>
       </section>
 
@@ -1507,6 +1630,8 @@ function showTripDetail(tripId) {
   document.getElementById('homeScreen').style.display = 'none';
   document.getElementById('tripScreen').style.display = '';
   document.getElementById('newTripBtn').style.display = 'none';
+  // 처음 진입 시 Map 탭 활성화 (이미 active면 그대로)
+  setActiveTripTab('map');
   if (currentTripId === tripId && currentTrip) {
     renderTripDetail(currentTrip);
     return;
@@ -1517,6 +1642,7 @@ function showTripDetail(tripId) {
 
 function listenToTrip(tripId) {
   if (currentTripUnsub) currentTripUnsub();
+  if (typeof resetMapState === 'function') resetMapState();
 
   // Header 임시
   document.getElementById('th_title').textContent = '불러오는 중…';
@@ -1558,6 +1684,10 @@ function renderTripDetail(trip) {
 
   // Plan 탭 렌더
   renderPlan(d.plan || []);
+  // Map 탭 마커 (활성이면 즉시, 아니면 다음 활성화 시)
+  if (activeTripTab === 'map' && leafletMap) {
+    renderMapMarkers();
+  }
 }
 
 // Trip tab navigation
@@ -1577,6 +1707,16 @@ function setActiveTripTab(tab) {
   document.querySelectorAll('.trip-tab-content').forEach(el => {
     el.classList.toggle('active', el.dataset.tab === tab);
   });
+  // Map 탭 진입 시 지도 초기화/리프레시
+  if (tab === 'map') {
+    initMap();
+    setTimeout(() => {
+      if (leafletMap) {
+        leafletMap.invalidateSize();
+        if (currentTrip) renderMapMarkers();
+      }
+    }, 50);
+  }
 }
 
 // Back button
@@ -1713,6 +1853,177 @@ async function updateTripData(updates) {
 }
 // 전역에 노출 (다음 단계에서 사용)
 window._tripAPI = { updateTripData };
+
+// ===== Map Tab =====
+let leafletMap = null;
+let mapMarkersLayer = null;
+let userLocMarker = null;
+let lastMarkerCount = 0;
+
+function initMap() {
+  if (leafletMap) return;
+  if (typeof L === 'undefined') { setTimeout(initMap, 100); return; }
+
+  leafletMap = L.map('leafletMap', {
+    scrollWheelZoom: false,
+    tap: true,
+    zoomControl: true,
+  }).setView([13.7563, 100.5018], 12); // 임시 기본 (방콕)
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OSM &copy; CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(leafletMap);
+
+  mapMarkersLayer = L.layerGroup().addTo(leafletMap);
+
+  // Legend
+  const legend = document.getElementById('mapLegend');
+  legend.innerHTML = Object.values(CATEGORIES).map(v => `
+    <div class="legend-item">
+      <div class="legend-dot" style="background:${v.color}"></div>
+      <span>${v.label}</span>
+    </div>
+  `).join('');
+
+  setupLocateButton();
+  setupHotelButton();
+}
+
+function getAllMapPlaces() {
+  if (!currentTrip || !currentTrip.data) return [];
+  const result = [];
+  const seen = new Set();
+  // places 먼저
+  (currentTrip.data.places || []).forEach(p => {
+    if (p.lat == null || p.lng == null) return;
+    const k = `${p.lat},${p.lng}`;
+    if (seen.has(k)) return;
+    seen.add(k);
+    result.push({ ...p, source: 'place' });
+  });
+  // plan 이벤트 (좌표 있는 것)
+  (currentTrip.data.plan || []).forEach(day => {
+    (day.events || []).forEach(ev => {
+      if (ev.lat == null || ev.lng == null) return;
+      const k = `${ev.lat},${ev.lng}`;
+      if (seen.has(k)) return;
+      seen.add(k);
+      result.push({
+        id: ev.id, name: ev.name, cat: ev.cat || 'activity',
+        lat: ev.lat, lng: ev.lng, note: ev.note, url: ev.url,
+        source: 'event',
+      });
+    });
+  });
+  return result;
+}
+
+function renderMapMarkers() {
+  if (!leafletMap || !mapMarkersLayer) return;
+  mapMarkersLayer.clearLayers();
+
+  const places = getAllMapPlaces();
+  const mapEmpty = document.getElementById('mapEmpty');
+  if (mapEmpty) mapEmpty.style.display = places.length === 0 ? '' : 'none';
+
+  const bounds = [];
+  places.forEach(p => {
+    const cat = CATEGORIES[p.cat] || CATEGORIES.activity;
+    const icon = L.divIcon({
+      className: 'custom-pin',
+      html: `<div class="custom-pin-wrap" style="background:${cat.color}"></div>`,
+      iconSize: [14, 14],
+      iconAnchor: [7, 7],
+      popupAnchor: [0, -8],
+    });
+    const m = L.marker([p.lat, p.lng], { icon });
+    m.bindPopup(`
+      <div class="pop-name">${escapeHtml(p.name || '')}</div>
+      <div class="pop-cat">${cat.label}</div>
+      ${p.note ? `<div class="pop-note">${escapeHtml(p.note)}</div>` : ''}
+      <a class="pop-link" href="${escapeAttr(getMapUrl(p))}" target="_blank" rel="noopener">↗ 구글맵에서 열기</a>
+    `);
+    mapMarkersLayer.addLayer(m);
+    bounds.push([p.lat, p.lng]);
+  });
+
+  // 호텔 버튼 표시 여부 (cat='hotel'인 장소가 있을 때만)
+  const hotel = places.find(p => p.cat === 'hotel');
+  const hotelBtn = document.getElementById('hotelBtn');
+  if (hotelBtn) hotelBtn.style.display = hotel ? '' : 'none';
+
+  // 마커 수가 변했을 때만 fitBounds (사용자 줌 보존)
+  if (bounds.length && lastMarkerCount !== places.length) {
+    leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+    lastMarkerCount = places.length;
+  } else if (bounds.length === 0) {
+    lastMarkerCount = 0;
+  }
+}
+
+function setupLocateButton() {
+  const btn = document.getElementById('locateBtn');
+  if (!btn || btn.dataset.bound) return;
+  btn.dataset.bound = '1';
+  btn.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      alert('이 브라우저는 위치 정보를 지원하지 않아요');
+      return;
+    }
+    btn.classList.add('loading');
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        btn.classList.remove('loading');
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if (userLocMarker) leafletMap.removeLayer(userLocMarker);
+        const icon = L.divIcon({
+          className: 'user-location-pin',
+          html: '<div class="user-location-marker"></div>',
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+        });
+        userLocMarker = L.marker([lat, lng], { icon, zIndexOffset: 1000 }).addTo(leafletMap);
+        userLocMarker.bindPopup('<div class="pop-name">내 위치</div>');
+        leafletMap.setView([lat, lng], 15);
+      },
+      err => {
+        btn.classList.remove('loading');
+        let msg = '위치를 가져올 수 없어요';
+        if (err.code === 1) msg = '위치 권한이 거부됐어요. 브라우저 설정에서 허용해주세요.';
+        else if (err.code === 3) msg = '위치 요청이 너무 오래 걸려요. 다시 시도해주세요.';
+        alert(msg);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  });
+}
+
+function setupHotelButton() {
+  const btn = document.getElementById('hotelBtn');
+  if (!btn || btn.dataset.bound) return;
+  btn.dataset.bound = '1';
+  btn.addEventListener('click', () => {
+    const places = getAllMapPlaces();
+    const hotel = places.find(p => p.cat === 'hotel');
+    if (!hotel) {
+      alert('호텔 위치가 등록되지 않았어요.\n이벤트 카테고리를 "호텔"로 설정하면 표시돼요.');
+      return;
+    }
+    leafletMap.setView([hotel.lat, hotel.lng], 16);
+  });
+}
+
+// 다른 trip으로 전환 시 마커 카운트 리셋
+function resetMapState() {
+  lastMarkerCount = 0;
+  if (userLocMarker && leafletMap) {
+    leafletMap.removeLayer(userLocMarker);
+    userLocMarker = null;
+  }
+}
 
 // ===== Plan Tab =====
 const CATEGORIES = {
