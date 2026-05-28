@@ -2363,7 +2363,7 @@ a.dir-item-arrow:hover { color: var(--text); }
     </div>
 
     <div class="modal-section" id="ts_migrateSection" style="display:none">
-      <div class="modal-label">방콕 앱 데이터</div>
+      <div class="modal-label">방콕 추천 코스</div>
       <div id="ts_migrateArea"></div>
     </div>
     <div class="modal-buttons">
@@ -2384,11 +2384,23 @@ a.dir-item-arrow:hover { color: var(--text); }
     </div>
 
     <div class="sub-nav" data-parent="migrate" style="margin-bottom: 16px">
-      <button type="button" class="sub-nav-item active" data-msub="auto">자동 (같은 브라우저)</button>
-      <button type="button" class="sub-nav-item" data-msub="paste">JSON 붙여넣기</button>
+      <button type="button" class="sub-nav-item active" data-msub="preset">추천 코스</button>
+      <button type="button" class="sub-nav-item" data-msub="auto">자동</button>
+      <button type="button" class="sub-nav-item" data-msub="paste">JSON</button>
     </div>
 
-    <div class="msub-content active" data-msub="auto">
+    <div class="msub-content active" data-msub="preset">
+      <div id="preset_preview" class="migrate-preview">—</div>
+      <label class="split-toggle on" id="migratePresetOverwrite" style="margin-top:14px">
+        <span class="mini-check"></span>
+        <span>기존 데이터에 덮어쓰기 (해제하면 합쳐짐)</span>
+      </label>
+      <div class="modal-hint" style="margin-top:12px">
+        Claude가 짠 방콕 4박5일 추천 코스예요. 일정·장소·체크리스트·노트가 한 번에 들어갑니다. 가져온 뒤 자유롭게 수정하세요.
+      </div>
+    </div>
+
+    <div class="msub-content" data-msub="auto">
       <div id="migrate_preview" class="migrate-preview">—</div>
       <label class="split-toggle on" id="migrateOverwrite" style="margin-top:14px">
         <span class="mini-check"></span>
@@ -3371,6 +3383,9 @@ async function removeMemberFromTrip(uid) {
 }
 
 // ===== Bangkok App Migration =====
+// Claude가 짠 방콕 추천 코스 (앱 내장)
+const BANGKOK_PRESET = {"plan":[{"id":"d1","date":"2026-06-12","theme":"arrival, gently","events":[{"id":"d1e1","time":"PM","name":"호텔 체크인 + 풀","note":"도착 후 적응. 책 한 권 들고 풀사이드.","url":"","cat":"hotel","lat":null,"lng":null},{"id":"d1e2","time":"19:00","name":"사톤 근처 가벼운 저녁","note":"","url":"","cat":"food","lat":null,"lng":null},{"id":"d1e3","time":"21:00","name":"마사지 → 일찍 잠","note":"비행 피로 풀기","url":"","cat":"massage","lat":null,"lng":null}]},{"id":"d2","date":"2026-06-13","theme":"송웟, 탈랏노이, 그리고 올드타운의 밤","events":[{"id":"d2e1","time":"07:00","name":"호텔 출발 · 그랩","note":"러시아워 피해서 일찍.","url":"","cat":"transport","lat":null,"lng":null},{"id":"d2e2","time":"09:00","name":"SCR — Song Wat Coffee Roasters","note":"더티라떼 시그니처. 빈티지 콘크리트 감성.","url":"https://www.google.com/maps/place/?q=place_id:ChIJoyc8PkeZ4jARw5Sv4vbnFhE","cat":"cafe","lat":13.7391467,"lng":100.5066564},{"id":"d2e3","time":"10:30","name":"Mother Roaster — Talat Noi","note":"2층 옛 태국집. 할머니가 직접 내려주는 커피. 골목 그래피티 산책.","url":"https://www.google.com/maps/place/?q=place_id:ChIJ1bQYQayZ4jARpphLAIGHblQ","cat":"cafe","lat":13.7329909,"lng":100.5123218},{"id":"d2e4","time":"16:30","name":"마사지","note":"","url":"","cat":"massage","lat":null,"lng":null},{"id":"d2e5","time":"19:00","name":"저녁 — 호텔 또는 사톤","note":"","url":"","cat":"food","lat":null,"lng":null},{"id":"d2e6","time":"20:00","name":"Leelabar","note":"올드타운 4층 루프탑. 히든 젬.","url":"https://www.google.com/maps/place/?q=place_id:ChIJlb8hgcCZ4jARuePQi0g9oN4","cat":"bar","lat":13.7490416,"lng":100.5045911},{"id":"d2e7","time":"21:30","name":"The One Khaosan — 분위기만","note":"도보 10분. 가격 바꿔치기 후기 있으니 주의.","url":"https://www.google.com/maps/place/?q=place_id:ChIJqUczUW2Z4jARDp-Hi36LAFk","cat":"bar","lat":13.7592095,"lng":100.4968991}]},{"id":"d3","date":"2026-06-14","theme":"호텔 중심의, 가장 게으른 하루","events":[{"id":"d3e1","time":"08:00","name":"tarns coffee","note":"호텔 도보 10분. 일본풍 미니멀. 책 읽기 좋음.","url":"https://www.google.com/maps/place/?q=place_id:ChIJub6OZACf4jARcRjVx75grFs","cat":"cafe","lat":13.7220819,"lng":100.5370481},{"id":"d3e2","time":"09:30","name":"룸피니 파크 산책","note":"호텔 바로 옆. 아침 공기.","url":"","cat":"activity","lat":null,"lng":null},{"id":"d3e3","time":"17:00","name":"마사지","note":"","url":"","cat":"massage","lat":null,"lng":null},{"id":"d3e4","time":"19:00","name":"사톤 근처 저녁","note":"","url":"","cat":"food","lat":null,"lng":null},{"id":"d3e5","time":"20:30","name":"Maggie Choo's 🎷","note":"그랩 5~10분. 1930년대 상하이 비밀 클럽 컨셉. 라이브 재즈. 토요일은 예약 권장.","url":"https://www.google.com/maps/place/?q=place_id:ChIJ68V6JtOY4jAREx42-cvq9R0","cat":"bar","lat":13.7230861,"lng":100.5184222}]},{"id":"d4","date":"2026-06-15","theme":"수쿰빗으로, 한 번","events":[{"id":"d4e1","time":"09:00","name":"Rung Rueang Pork Noodles","note":"BTS Phrom Phong. 미슐랭 빕구르망 폭누들. 100밧 가성비.","url":"https://www.google.com/maps/place/?q=place_id:ChIJMwKZPwGf4jARkgykQtmIoM8","cat":"food","lat":13.7284371,"lng":100.5706724},{"id":"d4e2","time":"10:30","name":"근처 카페 한 군데","note":"Phrom Phong 일대.","url":"","cat":"cafe","lat":null,"lng":null},{"id":"d4e3","time":"16:00","name":"마사지","note":"","url":"","cat":"massage","lat":null,"lng":null},{"id":"d4e4","time":"17:30","name":"Sanctuary Bangkok","note":"BTS Ekkamai. InterContinental 34층 루프탑. 노을 시간 맞춰서.","url":"https://www.google.com/maps/place/?q=place_id:ChIJ7UCSGJmf4jARfePMK8tF_2A","cat":"bar","lat":13.7224183,"lng":100.5814021},{"id":"d4e5","time":"19:30","name":"SW1 Market","note":"BTS Asok. 야시장, 라이브 음악 캐주얼 저녁.","url":"https://www.google.com/maps/place/?q=place_id:ChIJMSSVbwCf4jARMQeZPaFCjGo","cat":"market","lat":13.7380449,"lng":100.5584149}]},{"id":"d5","date":"2026-06-16","theme":"마무리, 천천히","events":[{"id":"d5e1","time":"07:00","name":"Dusit Central Park 옥상 가든","note":"호텔 도보. 6AM 오픈. 사람 없을 때 룸피니 뷰.","url":"https://www.google.com/maps/place/?q=place_id:ChIJe0H3CRSf4jAR_zOGf06ufiw","cat":"market","lat":13.7287601,"lng":100.5375563},{"id":"d5e2","time":"09:00","name":"호텔 조식 · 짐 정리","note":"","url":"","cat":"hotel","lat":null,"lng":null},{"id":"d5e3","time":"12:00","name":"체크아웃 → 공항","note":"수완나품 차 30분.","url":"","cat":"transport","lat":null,"lng":null}]}],"places":[{"id":"sukhothai","name":"The Sukhothai Bangkok","cat":"hotel","lat":13.7229783,"lng":100.540869,"note":"🏨 우리 호텔. BTS Chong Nonsi 도보권","url":"https://www.google.com/maps/place/?q=place_id:ChIJPfeHijq44jARW7bwbPBz3v4"},{"id":"healthland","name":"Health Land Sathon","cat":"massage","lat":13.7213709,"lng":100.5262333,"note":"2시간 800밧대. 호텔 도보.","url":"https://www.google.com/maps/place/?q=place_id:ChIJTyjRrs2Y4jARAx3zbZs6rOM"},{"id":"asiaherb","name":"Asia Herb Association","cat":"massage","lat":13.7260032,"lng":100.5676092,"note":"프롬퐁. Day 4 가는 길에 들르기 좋음.","url":"https://www.google.com/maps/place/?q=place_id:ChIJOwsnQASf4jAR_no5JyVXV1s"}],"checklist":[{"id":"c1","text":"여권 (만료일 6개월 이상 확인)","checked":false},{"id":"c2","text":"항공권 / 호텔 예약 확인서","checked":false},{"id":"c3","text":"여행자 보험","checked":false},{"id":"c4","text":"태국 입국 카드 (도착 전 작성)","checked":false},{"id":"c5","text":"바트 환전 또는 트래블카드","checked":false},{"id":"c6","text":"멀티 어댑터 (태국 220V)","checked":false},{"id":"c7","text":"자외선 차단제 + 모자","checked":false},{"id":"c8","text":"우산 / 우비 (6월 우기)","checked":false},{"id":"c9","text":"상비약 (지사제, 두통약, 모기약)","checked":false},{"id":"c10","text":"읽을 책","checked":false},{"id":"c11","text":"수영복","checked":false},{"id":"c12","text":"보조배터리","checked":false}],"tips":[{"id":"t1","label":"on heat —","body":"12 ~ 16시는 가장 더운 시간. 무조건 호텔. 외출은 7~10시, 17시 이후."},{"id":"t2","label":"on rain —","body":"6월은 우기. 스콜은 보통 1시간 안에 끝남. 작은 우산이면 충분."},{"id":"t3","label":"on transport —","body":"러시아워는 평일 7~9시, 16~19시. 이 시간엔 BTS · MRT가 그랩보다 빠름."},{"id":"t4","label":"on tipping —","body":"마사지는 50~100밧 정도. 식당은 봉사료 포함이라 별도 팁 안 줘도 OK."},{"id":"t5","label":"on dress code —","body":"사원 가는 일정은 없지만, 혹시 들르면 어깨 · 무릎 가리기. 루프탑 바는 캐주얼 OK."}],"settings":{"people":2,"currencyCode":"THB","exchangeRate":40}};
+
 // 방콕 앱의 localStorage 키들
 const BK_KEYS = {
   plan: 'bk-plan-v2',
@@ -3418,32 +3433,17 @@ function renderMigrateArea() {
   const sec = document.getElementById('ts_migrateSection');
   const area = document.getElementById('ts_migrateArea');
   if (!sec || !area) return;
-  const bk = readBangkokData();
-  const summary = bangkokDataSummary(bk);
-  const total = summary.plan + summary.places + summary.checklist + summary.budget + summary.tips;
 
   // 항상 보이게
   sec.style.display = '';
-
-  if (total > 0) {
-    area.innerHTML = `
-      <div class="modal-hint" style="margin-bottom:8px">
-        방콕 앱(<code>bk-2026-daisy</code>)에 저장된 데이터가 발견됐어요.
-      </div>
-      <button type="button" class="migrate-cta" id="migrateOpenBtn">
-        ✨ 방콕 앱에서 가져오기 (이벤트 ${summary.plan} · 장소 ${summary.places} · 체크 ${summary.checklist} · 비용 ${summary.budget} · 노트 ${summary.tips})
-      </button>
-    `;
-  } else {
-    area.innerHTML = `
-      <div class="modal-hint" style="margin-bottom:8px">
-        이 브라우저에는 방콕 앱 데이터가 없어요. 다른 브라우저/기기에서 사용했다면 JSON 붙여넣기로 가져올 수 있어요.
-      </div>
-      <button type="button" class="migrate-cta" id="migrateOpenBtn">
-        ✨ 방콕 앱에서 가져오기 (JSON 붙여넣기)
-      </button>
-    `;
-  }
+  area.innerHTML = `
+    <div class="modal-hint" style="margin-bottom:8px">
+      Claude가 짠 방콕 4박5일 추천 코스를 한 번에 넣을 수 있어요.
+    </div>
+    <button type="button" class="migrate-cta" id="migrateOpenBtn">
+      ✨ 방콕 추천 코스 가져오기
+    </button>
+  `;
   document.getElementById('migrateOpenBtn').addEventListener('click', openMigrateModal);
 }
 
@@ -3452,6 +3452,28 @@ const migrateModal = document.getElementById('migrateModal');
 
 function openMigrateModal() {
   if (!settingsTrip) return;
+
+  // 추천 코스 미리보기
+  const presetSummary = bangkokDataSummary(BANGKOK_PRESET);
+  const presetPreview = document.getElementById('preset_preview');
+  if (presetPreview) {
+    const rows = [
+      { label: '날짜 (Day)', value: presetSummary.days },
+      { label: '이벤트', value: presetSummary.plan },
+      { label: '장소', value: presetSummary.places },
+      { label: '체크리스트', value: presetSummary.checklist },
+      { label: '노트', value: presetSummary.tips },
+      { label: '인원', value: presetSummary.people != null ? `${presetSummary.people}명` : '—' },
+      { label: '환율 (THB)', value: presetSummary.thbRate != null ? `${presetSummary.thbRate}원` : '—' },
+    ];
+    presetPreview.innerHTML = rows.map(r => `
+      <div class="migrate-row ${(typeof r.value === 'number' ? r.value === 0 : r.value === '—') ? 'empty' : ''}">
+        <span class="migrate-row-label">${r.label}</span>
+        <span class="migrate-row-value">${typeof r.value === 'number' ? r.value.toLocaleString('ko-KR') : r.value}</span>
+      </div>
+    `).join('');
+  }
+
   const bk = readBangkokData();
   const summary = bangkokDataSummary(bk);
   const hasAuto = (summary.plan + summary.places + summary.checklist + summary.budget + summary.tips) > 0;
@@ -3494,20 +3516,23 @@ function openMigrateModal() {
   );
   const overwriteToggle = document.getElementById('migrateOverwrite');
   const pasteOverwriteToggle = document.getElementById('migratePasteOverwrite');
+  const presetOverwriteToggle = document.getElementById('migratePresetOverwrite');
   if (hasExisting) {
     overwriteToggle.classList.remove('on');
     pasteOverwriteToggle.classList.remove('on');
+    if (presetOverwriteToggle) presetOverwriteToggle.classList.remove('on');
   } else {
     overwriteToggle.classList.add('on');
     pasteOverwriteToggle.classList.add('on');
+    if (presetOverwriteToggle) presetOverwriteToggle.classList.add('on');
   }
 
   // Export 명령어 채우기
   const cmd = `copy(JSON.stringify({plan:JSON.parse(localStorage.getItem('bk-plan-v2')||'[]'),places:JSON.parse(localStorage.getItem('bk-places-v3')||'[]'),checklist:JSON.parse(localStorage.getItem('bk-checklist-v2')||'[]'),budget:JSON.parse(localStorage.getItem('bk-budget-v1')||'[]'),tips:JSON.parse(localStorage.getItem('bk-tips-v1')||'[]'),people:Number(localStorage.getItem('bk-people-v1'))||null,thbRate:Number(localStorage.getItem('bk-thb-rate'))||null}))`;
   document.getElementById('exportCmd').textContent = cmd;
 
-  // 시작 sub-tab: 자동 데이터가 있으면 auto, 없으면 paste
-  setActiveMigrateSub(hasAuto ? 'auto' : 'paste');
+  // 시작 sub-tab: 추천 코스가 기본
+  setActiveMigrateSub('preset');
 
   // paste textarea 비우기
   document.getElementById('pasteJsonInput').value = '';
@@ -3533,10 +3558,13 @@ function closeMigrateModal() {
 async function doMigrate() {
   if (!settingsTrip) return;
   // 현재 어느 sub-tab 활성?
-  const activeSub = migrateModal.querySelector('.sub-nav-item.active')?.dataset.msub || 'auto';
+  const activeSub = migrateModal.querySelector('.sub-nav-item.active')?.dataset.msub || 'preset';
   let bk;
   let overwrite;
-  if (activeSub === 'paste') {
+  if (activeSub === 'preset') {
+    bk = JSON.parse(JSON.stringify(BANGKOK_PRESET));
+    overwrite = document.getElementById('migratePresetOverwrite').classList.contains('on');
+  } else if (activeSub === 'paste') {
     const raw = document.getElementById('pasteJsonInput').value.trim();
     if (!raw) { alert('JSON을 붙여넣어주세요'); return; }
     try {
@@ -3662,7 +3690,7 @@ async function doMigrate() {
     });
     closeMigrateModal();
     closeTripSettings();
-    showToast('방콕 앱 데이터 가져오기 완료!');
+    showToast('가져오기 완료! ✨');
   } catch (e) {
     alert('가져오기 실패: ' + e.message);
   } finally {
