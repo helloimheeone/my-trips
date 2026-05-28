@@ -1316,6 +1316,43 @@ body {
 }
 
 /* ====== Places Directory (Notes) ====== */
+.cat-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+.cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg);
+  border-radius: 16px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.cat-chip:hover { border-color: var(--text); color: var(--text); }
+.cat-chip.active {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+.cat-chip-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cat-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .dir-group { margin-bottom: 32px; }
 .dir-group-title {
   font-family: 'Fraunces', serif;
@@ -3431,20 +3468,7 @@ function bangkokDataSummary(bk) {
 
 function renderMigrateArea() {
   const sec = document.getElementById('ts_migrateSection');
-  const area = document.getElementById('ts_migrateArea');
-  if (!sec || !area) return;
-
-  // 항상 보이게
-  sec.style.display = '';
-  area.innerHTML = `
-    <div class="modal-hint" style="margin-bottom:8px">
-      Claude가 짠 방콕 4박5일 추천 코스를 한 번에 넣을 수 있어요.
-    </div>
-    <button type="button" class="migrate-cta" id="migrateOpenBtn">
-      ✨ 방콕 추천 코스 가져오기
-    </button>
-  `;
-  document.getElementById('migrateOpenBtn').addEventListener('click', openMigrateModal);
+  if (sec) sec.style.display = 'none'; // 가져오기 완료 후 숨김
 }
 
 // === Migrate Modal ===
@@ -4280,6 +4304,8 @@ async function savePlaces(items) {
   await updateTripData({ 'data.places': items });
 }
 
+let placeFilter = 'all'; // 현재 카테고리 필터
+
 function renderPlacesDirectory() {
   const c = document.getElementById('placesContainer');
   if (!c) return;
@@ -4301,19 +4327,58 @@ function renderPlacesDirectory() {
 
   const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
 
+  // 존재하는 카테고리 수집 (필터 칩용)
+  const presentCats = new Set();
+  planned.forEach(p => { if (p.cat) presentCats.add(p.cat); });
+  places.forEach(p => { if (p.cat) presentCats.add(p.cat); });
+
+  // 필터가 더 이상 존재하지 않는 카테고리면 all로 복귀
+  if (placeFilter !== 'all' && !presentCats.has(placeFilter)) placeFilter = 'all';
+
+  // 필터 칩 (전체 + 존재하는 카테고리만)
+  let chipsHtml = '';
+  if (presentCats.size > 0) {
+    const chips = ['all', ...Object.keys(CATEGORIES).filter(k => presentCats.has(k))];
+    chipsHtml = `<div class="cat-filter-bar">` + chips.map(k => {
+      const isAll = k === 'all';
+      const label = isAll ? '전체' : CATEGORIES[k].label;
+      const color = isAll ? '' : CATEGORIES[k].color;
+      const active = placeFilter === k ? 'active' : '';
+      return `<button type="button" class="cat-chip ${active}" data-cat="${k}">
+        ${isAll ? '' : `<span class="cat-chip-dot" style="background:${color}"></span>`}${escapeHtml(label)}
+      </button>`;
+    }).join('') + `</div>`;
+  }
+
+  // 필터 적용
+  const filterFn = p => placeFilter === 'all' || p.cat === placeFilter;
+  const fPlanned = planned.filter(filterFn);
+  const fPlaces = places.filter(filterFn);
+
   c.innerHTML = `
+    ${chipsHtml}
     <div class="dir-group">
-      <div class="dir-group-title">in plan <span class="dir-group-count">${planned.length}</span></div>
-      ${planned.length
-        ? planned.map(p => renderPlannedItem(p)).join('')
-        : '<div class="places-empty">아직 URL/좌표가 있는 이벤트가 없어요</div>'}
+      <div class="dir-group-title">in plan <span class="dir-group-count">${fPlanned.length}</span></div>
+      ${fPlanned.length
+        ? fPlanned.map(p => renderPlannedItem(p)).join('')
+        : '<div class="places-empty">해당하는 일정 장소가 없어요</div>'}
     </div>
     <div class="dir-group">
-      <div class="dir-group-title">other places <span class="dir-group-count">${places.length}</span></div>
-      ${places.map(p => renderUnplannedItem(p)).join('')}
+      <div class="dir-group-title">other places <span class="dir-group-count">${fPlaces.length}</span></div>
+      ${fPlaces.length
+        ? fPlaces.map(p => renderUnplannedItem(p)).join('')
+        : '<div class="places-empty">해당하는 장소가 없어요</div>'}
       <button class="add-place-btn" type="button" id="addPlaceBtn">+ 장소 추가</button>
     </div>
   `;
+
+  // 필터 칩 핸들러
+  c.querySelectorAll('.cat-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      placeFilter = chip.dataset.cat;
+      renderPlacesDirectory();
+    });
+  });
 
   c.querySelectorAll('.unplanned-item').forEach(el => {
     el.addEventListener('click', e => {
@@ -4331,8 +4396,8 @@ function renderPlannedItem(p) {
   return `
     <a href="${escapeAttr(url)}" target="_blank" rel="noopener" class="dir-item">
       <div class="dir-item-info">
-        <div class="dir-item-name">${escapeHtml(p.name || '')}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
-        <div class="dir-item-note">Day ${escapeHtml(p.dayLabel)}${p.time ? ' · ' + escapeHtml(p.time) : ''}</div>
+        <div class="dir-item-name">${escapeHtml(p.name || '')}</div>
+        <div class="dir-item-note">${cat ? `<span class="cat-tag"><span class="cat-chip-dot" style="background:${cat.color}"></span>${cat.label}</span> · ` : ''}Day ${escapeHtml(p.dayLabel)}${p.time ? ' · ' + escapeHtml(p.time) : ''}</div>
       </div>
       <span class="dir-item-arrow">→</span>
     </a>
@@ -4345,8 +4410,10 @@ function renderUnplannedItem(p) {
   return `
     <div class="dir-item unplanned-item" data-place-id="${escapeAttr(p.id)}">
       <div class="dir-item-info">
-        <div class="dir-item-name">${escapeHtml(p.name || '')}${cat ? `<span class="event-cat-dot" style="background:${cat.color}"></span>` : ''}</div>
-        ${p.note ? `<div class="dir-item-note">${escapeHtml(p.note)}</div>` : ''}
+        <div class="dir-item-name">${escapeHtml(p.name || '')}</div>
+        <div class="dir-item-note">
+          ${cat ? `<span class="cat-tag"><span class="cat-chip-dot" style="background:${cat.color}"></span>${cat.label}</span>` : ''}${cat && p.note ? ' · ' : ''}${p.note ? escapeHtml(p.note) : ''}
+        </div>
       </div>
       ${hasTarget
         ? `<a href="${escapeAttr(getMapUrl(p))}" target="_blank" rel="noopener" class="dir-item-arrow" onclick="event.stopPropagation()">→</a>`
