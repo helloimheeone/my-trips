@@ -1816,6 +1816,54 @@ a.dir-item-arrow:hover { color: var(--text); }
   pointer-events: none;
 }
 .toast.show { opacity: 1; }
+
+/* ====== Migration ====== */
+.migrate-cta {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: none;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: all 0.15s;
+}
+.migrate-cta:hover {
+  background: var(--accent);
+  color: white;
+}
+.migrate-empty {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--soft);
+  padding: 8px 0;
+}
+
+.migrate-preview {
+  background: var(--rest-bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 14px;
+}
+.migrate-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px dashed var(--line);
+}
+.migrate-row:last-child { border-bottom: none; }
+.migrate-row-label { color: var(--muted); }
+.migrate-row-value {
+  font-family: 'Fraunces', serif;
+  font-variant-numeric: tabular-nums;
+}
+.migrate-row.empty .migrate-row-value { color: var(--soft); }
 .modal-hint {
   font-family: 'Fraunces', serif;
   font-style: italic;
@@ -2294,11 +2342,38 @@ a.dir-item-arrow:hover { color: var(--text); }
         <button type="button" class="invite-create-btn" id="inviteCreateBtn">+ 공유 링크 만들기</button>
       </div>
     </div>
+
+    <div class="modal-section" id="ts_migrateSection" style="display:none">
+      <div class="modal-label">방콕 앱 데이터</div>
+      <div id="ts_migrateArea"></div>
+    </div>
     <div class="modal-buttons">
       <button class="modal-save" id="tripSettingsSave">저장</button>
       <button class="modal-cancel" id="tripSettingsCancel">취소</button>
       <button class="modal-secondary" id="tripCloneBtn">복제</button>
       <button class="modal-delete" id="tripDeleteBtn">삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- Migration Modal -->
+<div class="modal-backdrop" id="migrateModal" role="dialog">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">방콕 앱 데이터 가져오기</h3>
+      <button class="modal-close" id="migrateModalClose">×</button>
+    </div>
+    <div id="migrate_preview" class="migrate-preview">—</div>
+    <label class="split-toggle on" id="migrateOverwrite" style="margin-top:14px">
+      <span class="mini-check"></span>
+      <span>기존 데이터에 덮어쓰기 (해제하면 합쳐짐)</span>
+    </label>
+    <div class="modal-hint" style="margin-top:12px">
+      방콕 앱의 원본 데이터는 그대로 유지돼요. 가져온 데이터는 이 여행에 저장됩니다.
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-save" id="migrateModalGo">가져오기</button>
+      <button class="modal-cancel" id="migrateModalCancel">취소</button>
     </div>
   </div>
 </div>
@@ -3075,6 +3150,7 @@ function openTripSettings(trip) {
 
   renderMembersInModal();
   renderInviteArea();
+  renderMigrateArea();
 
   // 소유자만 삭제 가능
   const isOwner = trip.ownerId === currentUser.uid;
@@ -3242,6 +3318,257 @@ async function removeMemberFromTrip(uid) {
     alert('제거 실패: ' + e.message);
   }
 }
+
+// ===== Bangkok App Migration =====
+// 방콕 앱의 localStorage 키들
+const BK_KEYS = {
+  plan: 'bk-plan-v2',
+  places: 'bk-places-v3',
+  checklist: 'bk-checklist-v2',
+  budget: 'bk-budget-v1',
+  tips: 'bk-tips-v1',
+  people: 'bk-people-v1',
+  thbRate: 'bk-thb-rate',
+};
+
+function readBangkokData() {
+  const result = {};
+  try {
+    for (const [key, lsKey] of Object.entries(BK_KEYS)) {
+      const raw = localStorage.getItem(lsKey);
+      if (raw == null) continue;
+      try {
+        result[key] = JSON.parse(raw);
+      } catch {
+        // 숫자/문자열 그대로 (people, thbRate)
+        result[key] = raw;
+      }
+    }
+  } catch (e) {
+    console.warn('[migrate] localStorage 읽기 실패', e);
+  }
+  return result;
+}
+
+function bangkokDataSummary(bk) {
+  return {
+    plan: Array.isArray(bk.plan) ? bk.plan.reduce((s, d) => s + ((d.events || []).length), 0) : 0,
+    days: Array.isArray(bk.plan) ? bk.plan.length : 0,
+    places: Array.isArray(bk.places) ? bk.places.length : 0,
+    checklist: Array.isArray(bk.checklist) ? bk.checklist.length : 0,
+    budget: Array.isArray(bk.budget) ? bk.budget.length : 0,
+    tips: Array.isArray(bk.tips) ? bk.tips.length : 0,
+    people: bk.people ? Number(bk.people) || null : null,
+    thbRate: bk.thbRate ? Number(bk.thbRate) || null : null,
+  };
+}
+
+function renderMigrateArea() {
+  const sec = document.getElementById('ts_migrateSection');
+  const area = document.getElementById('ts_migrateArea');
+  if (!sec || !area) return;
+  const bk = readBangkokData();
+  const summary = bangkokDataSummary(bk);
+  const total = summary.plan + summary.places + summary.checklist + summary.budget + summary.tips;
+
+  if (total === 0) {
+    // 방콕 데이터 없으면 섹션 숨김
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = '';
+  area.innerHTML = `
+    <div class="modal-hint" style="margin-bottom:8px">
+      방콕 앱(<code>bk-2026-daisy</code>)에 저장된 데이터가 발견됐어요.
+    </div>
+    <button type="button" class="migrate-cta" id="migrateOpenBtn">
+      ✨ 방콕 앱에서 가져오기 (이벤트 ${summary.plan} · 장소 ${summary.places} · 체크 ${summary.checklist} · 비용 ${summary.budget} · 노트 ${summary.tips})
+    </button>
+  `;
+  document.getElementById('migrateOpenBtn').addEventListener('click', openMigrateModal);
+}
+
+// === Migrate Modal ===
+const migrateModal = document.getElementById('migrateModal');
+
+function openMigrateModal() {
+  if (!settingsTrip) return;
+  const bk = readBangkokData();
+  const summary = bangkokDataSummary(bk);
+
+  // 미리보기
+  const preview = document.getElementById('migrate_preview');
+  const rows = [
+    { label: '날짜 (Day)', value: summary.days },
+    { label: '이벤트', value: summary.plan },
+    { label: '장소', value: summary.places },
+    { label: '체크리스트', value: summary.checklist },
+    { label: '비용', value: summary.budget },
+    { label: '노트', value: summary.tips },
+    { label: '인원', value: summary.people != null ? `${summary.people}명` : '—' },
+    { label: '환율 (THB)', value: summary.thbRate != null ? `${summary.thbRate}원` : '—' },
+  ];
+  preview.innerHTML = rows.map(r => `
+    <div class="migrate-row ${(typeof r.value === 'number' ? r.value === 0 : r.value === '—') ? 'empty' : ''}">
+      <span class="migrate-row-label">${r.label}</span>
+      <span class="migrate-row-value">${typeof r.value === 'number' ? r.value.toLocaleString('ko-KR') : r.value}</span>
+    </div>
+  `).join('');
+
+  // 기본: 덮어쓰기 체크됨, 단 현재 trip에 데이터가 있으면 덮어쓰기 해제
+  const hasExisting = currentTrip && currentTrip.data && (
+    (currentTrip.data.plan || []).length ||
+    (currentTrip.data.places || []).length ||
+    (currentTrip.data.checklist || []).length ||
+    (currentTrip.data.budget || []).length ||
+    (currentTrip.data.tips || []).length
+  );
+  const overwriteToggle = document.getElementById('migrateOverwrite');
+  if (hasExisting) overwriteToggle.classList.remove('on');
+  else overwriteToggle.classList.add('on');
+
+  migrateModal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeMigrateModal() {
+  migrateModal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function doMigrate() {
+  if (!settingsTrip) return;
+  const bk = readBangkokData();
+  const overwrite = document.getElementById('migrateOverwrite').classList.contains('on');
+
+  // 현재 데이터 시작점
+  const cur = currentTrip && currentTrip.data ? currentTrip.data : {};
+  const newData = {
+    plan: overwrite ? [] : JSON.parse(JSON.stringify(cur.plan || [])),
+    places: overwrite ? [] : JSON.parse(JSON.stringify(cur.places || [])),
+    checklist: overwrite ? [] : JSON.parse(JSON.stringify(cur.checklist || [])),
+    budget: overwrite ? [] : JSON.parse(JSON.stringify(cur.budget || [])),
+    tips: overwrite ? [] : JSON.parse(JSON.stringify(cur.tips || [])),
+    settings: { ...(cur.settings || {}) },
+  };
+
+  // Plan 마이그레이션 — 방콕 앱 구조에 따라 정규화
+  if (Array.isArray(bk.plan)) {
+    bk.plan.forEach(day => {
+      const normalizedDay = {
+        id: day.id || ('d' + Date.now() + Math.random().toString(36).slice(2, 6)),
+        date: day.date || null,
+        theme: day.theme || '',
+        events: (day.events || []).map(ev => ({
+          id: ev.id || ('e' + Date.now() + Math.random().toString(36).slice(2, 6)),
+          time: ev.time || '',
+          name: ev.name || '',
+          note: ev.note || '',
+          url: ev.url || '',
+          cat: ev.cat || '',
+          lat: ev.lat != null ? ev.lat : null,
+          lng: ev.lng != null ? ev.lng : null,
+        })),
+      };
+      newData.plan.push(normalizedDay);
+    });
+  }
+
+  // Places
+  if (Array.isArray(bk.places)) {
+    bk.places.forEach(p => {
+      newData.places.push({
+        id: p.id || ('p' + Date.now() + Math.random().toString(36).slice(2, 6)),
+        name: p.name || '',
+        note: p.note || '',
+        url: p.url || '',
+        cat: p.cat || '',
+        lat: p.lat != null ? p.lat : null,
+        lng: p.lng != null ? p.lng : null,
+      });
+    });
+  }
+
+  // Checklist
+  if (Array.isArray(bk.checklist)) {
+    bk.checklist.forEach(c => {
+      newData.checklist.push({
+        id: c.id || ('c' + Date.now() + Math.random().toString(36).slice(2, 6)),
+        text: c.text || '',
+        checked: !!c.checked,
+      });
+    });
+  }
+
+  // Budget
+  if (Array.isArray(bk.budget)) {
+    bk.budget.forEach(b => {
+      newData.budget.push({
+        id: b.id || ('b' + Date.now() + Math.random().toString(36).slice(2, 6)),
+        name: b.name || '',
+        amount: Number(b.amount) || 0,
+        payment: b.payment || 'cash',
+        includeSplit: b.includeSplit !== false, // 기본 true
+        createdAt: b.createdAt || Date.now(),
+      });
+    });
+  }
+
+  // Tips
+  if (Array.isArray(bk.tips)) {
+    bk.tips.forEach(t => {
+      newData.tips.push({
+        id: t.id || ('tp' + Date.now() + Math.random().toString(36).slice(2, 6)),
+        label: t.label || '',
+        body: t.body || '',
+      });
+    });
+  }
+
+  // Settings
+  if (bk.people != null) {
+    const n = Number(bk.people);
+    if (!Number.isNaN(n) && n > 0) newData.settings.people = n;
+  }
+  if (bk.thbRate != null) {
+    const r = Number(bk.thbRate);
+    if (!Number.isNaN(r) && r > 0) {
+      newData.settings.exchangeRate = r;
+      newData.settings.currencyCode = 'THB';
+    }
+  }
+  // 기본값 보장
+  if (!newData.settings.people) newData.settings.people = 2;
+  if (!newData.settings.currencyCode) newData.settings.currencyCode = 'THB';
+  if (!newData.settings.exchangeRate) newData.settings.exchangeRate = 40;
+
+  const btn = document.getElementById('migrateModalGo');
+  btn.disabled = true;
+  btn.textContent = '가져오는 중…';
+  try {
+    await updateDoc(doc(db, 'trips', settingsTrip.id), {
+      data: newData,
+      updatedAt: serverTimestamp(),
+    });
+    closeMigrateModal();
+    closeTripSettings();
+    showToast('방콕 앱 데이터 가져오기 완료!');
+  } catch (e) {
+    alert('가져오기 실패: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '가져오기';
+  }
+}
+
+// migrate modal handlers
+document.getElementById('migrateModalClose').addEventListener('click', closeMigrateModal);
+document.getElementById('migrateModalCancel').addEventListener('click', closeMigrateModal);
+document.getElementById('migrateModalGo').addEventListener('click', doMigrate);
+document.getElementById('migrateOverwrite').addEventListener('click', () => {
+  document.getElementById('migrateOverwrite').classList.toggle('on');
+});
+migrateModal.addEventListener('click', e => { if (e.target === migrateModal) closeMigrateModal(); });
 
 function closeTripSettings() {
   tripSettingsModal.classList.remove('open');
