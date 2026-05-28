@@ -57,20 +57,29 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Theme toggle */
+/* Theme toggle (login에서는 fixed, app에서는 inline) */
 .theme-toggle {
-  position: fixed;
-  top: 14px; right: 14px;
-  z-index: 100;
-  width: 36px; height: 36px;
+  width: 32px; height: 32px;
   border-radius: 50%;
   border: 1px solid var(--line-strong);
   background: var(--bg);
   color: var(--text);
   cursor: pointer;
-  font-size: 15px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
 }
 .theme-toggle:hover { border-color: var(--text); }
+.theme-toggle.fixed-toggle {
+  position: fixed;
+  top: 14px; right: 14px;
+  z-index: 100;
+  width: 36px; height: 36px;
+  font-size: 15px;
+}
 
 /* ====== Login View ====== */
 .login-view {
@@ -1977,7 +1986,7 @@ a.dir-item-arrow:hover { color: var(--text); }
 </head>
 <body>
 
-<button class="theme-toggle" id="themeToggle" aria-label="테마">🌙</button>
+<button class="theme-toggle fixed-toggle" id="themeToggleFixed" aria-label="테마">🌙</button>
 
 <!-- Loading -->
 <div class="loading-view" id="loadingView">
@@ -2009,6 +2018,7 @@ a.dir-item-arrow:hover { color: var(--text); }
     <header class="app-header">
       <h1 class="app-title">my <span class="app-title-italic">trips</span></h1>
       <div class="user-area">
+        <button class="theme-toggle" id="themeToggleInline" aria-label="테마">🌙</button>
         <img id="userAvatar" class="user-avatar" alt="" referrerpolicy="no-referrer">
         <button class="text-btn" id="logoutBtn">로그아웃</button>
       </div>
@@ -2425,18 +2435,26 @@ let currentTripsList = [];
 // ===== Theme Toggle =====
 (function() {
   const root = document.documentElement;
-  const btn = document.getElementById('themeToggle');
+  const btnFixed = document.getElementById('themeToggleFixed');
+  const btnInline = document.getElementById('themeToggleInline');
   const saved = localStorage.getItem('mt-theme');
   const initial = saved || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
   if (initial === 'dark') root.setAttribute('data-theme', 'dark');
-  btn.textContent = initial === 'dark' ? '☀️' : '🌙';
-  btn.addEventListener('click', () => {
+  const icon = initial === 'dark' ? '☀️' : '🌙';
+  if (btnFixed) btnFixed.textContent = icon;
+  if (btnInline) btnInline.textContent = icon;
+
+  function toggle() {
     const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
     if (next === 'dark') root.setAttribute('data-theme', 'dark');
     else root.removeAttribute('data-theme');
-    btn.textContent = next === 'dark' ? '☀️' : '🌙';
+    const ic = next === 'dark' ? '☀️' : '🌙';
+    if (btnFixed) btnFixed.textContent = ic;
+    if (btnInline) btnInline.textContent = ic;
     localStorage.setItem('mt-theme', next);
-  });
+  }
+  if (btnFixed) btnFixed.addEventListener('click', toggle);
+  if (btnInline) btnInline.addEventListener('click', toggle);
 })();
 
 // ===== Auth =====
@@ -2455,12 +2473,18 @@ function showLogin() {
   document.getElementById('loginView').style.display = '';
   document.getElementById('appView').style.display = 'none';
   document.getElementById('newTripBtn').style.display = 'none';
+  // login 화면에서는 fixed 토글 보임
+  const ft = document.getElementById('themeToggleFixed');
+  if (ft) ft.style.display = '';
   if (unsubTrips) { unsubTrips(); unsubTrips = null; }
 }
 
 function showApp(user) {
   document.getElementById('loginView').style.display = 'none';
   document.getElementById('appView').style.display = '';
+  // app 화면에서는 fixed 토글 숨김 (user-area에 inline 토글이 있음)
+  const ft = document.getElementById('themeToggleFixed');
+  if (ft) ft.style.display = 'none';
   const avatar = document.getElementById('userAvatar');
   if (user.photoURL) avatar.src = user.photoURL;
   // user 문서 만들거나 업데이트
@@ -2810,10 +2834,19 @@ async function showInviteJoin(tripId, token) {
   joinScreen.style.display = '';
   joinScreen.innerHTML = '<div class="join-card"><div class="loading-text">초대 확인 중…</div></div>';
 
+  console.log('[invite] showInviteJoin 시작', { tripId, token, uid: currentUser.uid });
+
   try {
     const snap = await getDoc(doc(db, 'trips', tripId));
-    if (!snap.exists()) throw new Error('이 여행을 찾을 수 없어요');
+    console.log('[invite] getDoc 결과', { exists: snap.exists() });
+    if (!snap.exists()) throw new Error('이 여행을 찾을 수 없어요 (문서 없음)');
     const trip = snap.data();
+    console.log('[invite] trip 데이터', {
+      title: trip.title,
+      inviteToken: trip.inviteToken,
+      memberIds: trip.memberIds,
+      tokenMatch: trip.inviteToken === token,
+    });
 
     // 이미 멤버면 바로 trip으로
     if ((trip.memberIds || []).includes(currentUser.uid)) {
@@ -2821,8 +2854,8 @@ async function showInviteJoin(tripId, token) {
       return;
     }
 
-    if (!trip.inviteToken) throw new Error('이 초대 링크는 만료됐어요');
-    if (trip.inviteToken !== token) throw new Error('초대 토큰이 일치하지 않아요');
+    if (!trip.inviteToken) throw new Error('이 초대 링크는 만료됐어요 (소유자가 해제함)');
+    if (trip.inviteToken !== token) throw new Error('초대 토큰이 일치하지 않아요 (링크가 갱신됨)');
 
     // 확인 화면
     joinScreen.innerHTML = `
@@ -2838,11 +2871,20 @@ async function showInviteJoin(tripId, token) {
     `;
     document.getElementById('joinAcceptBtn').addEventListener('click', () => acceptInvite(tripId, token));
   } catch (e) {
+    console.error('[invite] showInviteJoin 에러', e);
+    const errCode = e.code || '';
+    const errMsg = e.message || '알 수 없는 오류';
+    let hint = '';
+    if (errCode === 'permission-denied' || errMsg.includes('permission')) {
+      hint = '<div style="margin-top:10px;font-size:11px;color:var(--soft);font-family:Fraunces,serif;font-style:italic">Firestore 보안 규칙을 다시 확인해주세요. 비멤버도 inviteToken이 있는 trip을 읽을 수 있어야 해요.</div>';
+    }
     joinScreen.innerHTML = `
       <div class="join-card">
         <h2 class="join-title">참여할 수 없어요</h2>
-        <div class="join-meta" style="color:var(--danger)">${escapeHtml(e.message)}</div>
-        <button class="join-btn" onclick="window.location.hash='#/'">홈으로</button>
+        <div class="join-meta" style="color:var(--danger)">${escapeHtml(errMsg)}</div>
+        ${errCode ? `<div class="join-meta" style="font-size:11px">코드: ${escapeHtml(errCode)}</div>` : ''}
+        ${hint}
+        <button class="join-btn" onclick="window.location.hash='#/'" style="margin-top:20px">홈으로</button>
       </div>
     `;
   }
