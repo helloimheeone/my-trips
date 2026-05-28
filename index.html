@@ -16,6 +16,7 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js" defer></script>
 <link rel="apple-touch-icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="80" fill="%23fafaf7"/><text x="256" y="340" font-family="serif" font-size="280" text-anchor="middle" fill="%231a1a1a" font-weight="300" font-style="italic">mt</text></svg>'>
+<link rel="manifest" href='data:application/manifest+json,{"name":"my trips","short_name":"my trips","start_url":"./","scope":"./","display":"standalone","background_color":"%23fafaf7","theme_color":"%23fafaf7","icons":[{"src":"data:image/svg+xml,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27><rect width=%27512%27 height=%27512%27 rx=%2780%27 fill=%27%23fafaf7%27/><text x=%27256%27 y=%27340%27 font-family=%27serif%27 font-size=%27280%27 text-anchor=%27middle%27 fill=%27%231a1a1a%27 font-weight=%27300%27 font-style=%27italic%27>mt</text></svg>","sizes":"any","type":"image/svg+xml"}]}'>
 <style>
 :root {
   --bg: #fafaf7;
@@ -413,6 +414,17 @@ body {
   letter-spacing: 0.04em;
   margin-bottom: 2px;
 }
+.th-dday {
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: var(--bg);
+  background: var(--accent);
+  padding: 1px 7px;
+  border-radius: 9px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
 .trip-header-title {
   font-family: 'Fraunces', serif;
   font-size: 18px;
@@ -552,6 +564,47 @@ body {
 }
 
 /* ====== Map Tab ====== */
+.weather-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-bottom: 16px;
+  padding-bottom: 2px;
+}
+.weather-strip::-webkit-scrollbar { display: none; }
+.weather-day {
+  flex: 0 0 auto;
+  min-width: 64px;
+  text-align: center;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.weather-day.today { border-color: var(--text); }
+.weather-dow {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.weather-icon { font-size: 20px; line-height: 1; margin-bottom: 4px; }
+.weather-temp {
+  font-family: 'Fraunces', serif;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.weather-temp .hi { color: var(--text); }
+.weather-temp .lo { color: var(--soft); }
+.weather-rain {
+  font-size: 10px;
+  color: #4a6577;
+  margin-top: 2px;
+}
+
+
 .map-frame {
   position: relative;
   width: 100%;
@@ -2204,6 +2257,7 @@ a.dir-item-arrow:hover { color: var(--text); }
         </div>
 
         <div class="sub-content active" data-sub="view">
+          <div class="weather-strip" id="weatherStrip" style="display:none"></div>
           <div class="map-empty" id="mapEmpty" style="display:none">
             <p>아직 좌표가 있는 장소가 없어요.</p>
             <p class="muted">Plan 탭에서 이벤트에 구글맵 URL을 추가하면 핀이 표시돼요.</p>
@@ -2648,6 +2702,13 @@ const db = getFirestore(app);
 let currentUser = null;
 let unsubTrips = null;
 let currentTripsList = [];
+
+// ===== Service Worker (PWA) =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw-mytrips.js').catch(e => console.warn('SW 등록 실패', e));
+  });
+}
 
 // ===== Theme Toggle =====
 (function() {
@@ -3190,7 +3251,10 @@ function renderTripDetail(trip) {
   const meta = [];
   if (trip.destination) meta.push(trip.destination);
   if (trip.startDate) meta.push(formatDateRange(trip.startDate, trip.endDate));
-  document.getElementById('th_meta').textContent = meta.join(' · ') || '날짜 미정';
+
+  const metaEl = document.getElementById('th_meta');
+  const dday = computeDDay(trip);
+  metaEl.innerHTML = `${escapeHtml(meta.join(' · ') || '날짜 미정')}${dday ? ` <span class="th-dday">${escapeHtml(dday)}</span>` : ''}`;
 
   // 탭 stats (placeholder용)
   const d = trip.data || {};
@@ -5211,6 +5275,82 @@ function renderMapMarkers() {
   } else if (bounds.length === 0) {
     lastMarkerCount = 0;
   }
+
+  // 날씨 로드 (대표 좌표 기준)
+  loadWeatherForTrip(places);
+}
+
+// ===== Weather (Open-Meteo) =====
+let weatherLoadedFor = null; // 중복 로드 방지 (좌표 키)
+
+async function loadWeatherForTrip(places) {
+  const strip = document.getElementById('weatherStrip');
+  if (!strip) return;
+
+  // 대표 좌표: 호텔 우선, 없으면 첫 좌표
+  let ref = (places || []).find(p => p.cat === 'hotel' && p.lat != null);
+  if (!ref) ref = (places || []).find(p => p.lat != null);
+  if (!ref) { strip.style.display = 'none'; return; }
+
+  const key = `${ref.lat.toFixed(2)},${ref.lng.toFixed(2)}`;
+  if (weatherLoadedFor === key && strip.children.length) {
+    strip.style.display = '';
+    return; // 이미 같은 위치 로드됨
+  }
+  weatherLoadedFor = key;
+
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${ref.lat}&longitude=${ref.lng}` +
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('weather fetch failed');
+    const data = await res.json();
+    renderWeatherStrip(data.daily);
+  } catch (e) {
+    strip.style.display = 'none';
+  }
+}
+
+function weatherIcon(code) {
+  // WMO weather code → 이모지
+  if (code === 0) return '☀️';
+  if (code <= 2) return '🌤️';
+  if (code === 3) return '☁️';
+  if (code <= 48) return '🌫️';
+  if (code <= 57) return '🌦️';
+  if (code <= 67) return '🌧️';
+  if (code <= 77) return '🌨️';
+  if (code <= 82) return '🌧️';
+  if (code <= 86) return '🌨️';
+  if (code <= 99) return '⛈️';
+  return '🌡️';
+}
+
+function renderWeatherStrip(daily) {
+  const strip = document.getElementById('weatherStrip');
+  if (!strip || !daily || !daily.time) { if (strip) strip.style.display = 'none'; return; }
+  const today = new Date().toISOString().split('T')[0];
+  const dows = ['일','월','화','수','목','금','토'];
+  let html = '';
+  for (let i = 0; i < daily.time.length; i++) {
+    const date = daily.time[i];
+    const dt = new Date(date + 'T00:00:00');
+    const dow = dows[dt.getDay()];
+    const isToday = date === today;
+    const hi = Math.round(daily.temperature_2m_max[i]);
+    const lo = Math.round(daily.temperature_2m_min[i]);
+    const rain = daily.precipitation_probability_max ? daily.precipitation_probability_max[i] : null;
+    html += `
+      <div class="weather-day ${isToday ? 'today' : ''}">
+        <div class="weather-dow">${isToday ? '오늘' : dow}</div>
+        <div class="weather-icon">${weatherIcon(daily.weather_code[i])}</div>
+        <div class="weather-temp"><span class="hi">${hi}°</span> <span class="lo">${lo}°</span></div>
+        ${rain != null && rain >= 30 ? `<div class="weather-rain">☔ ${rain}%</div>` : ''}
+      </div>
+    `;
+  }
+  strip.innerHTML = html;
+  strip.style.display = '';
 }
 
 function setupLocateButton() {
@@ -5269,6 +5409,9 @@ function setupHotelButton() {
 // 다른 trip으로 전환 시 마커 카운트 리셋
 function resetMapState() {
   lastMarkerCount = 0;
+  weatherLoadedFor = null;
+  const strip = document.getElementById('weatherStrip');
+  if (strip) { strip.style.display = 'none'; strip.innerHTML = ''; }
   if (userLocMarker && leafletMap) {
     leafletMap.removeLayer(userLocMarker);
     userLocMarker = null;
