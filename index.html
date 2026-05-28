@@ -719,7 +719,7 @@ body {
 
 .check-area {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 12px;
   flex: 1;
   min-width: 0;
@@ -727,6 +727,7 @@ body {
 
 .checkbox {
   width: 20px; height: 20px;
+  margin-top: 1px;
   border: 1.5px solid var(--line-strong);
   border-radius: 50%;
   flex-shrink: 0;
@@ -749,8 +750,6 @@ body {
 
 .checklist-text {
   font-size: 15px;
-  flex: 1;
-  transition: color 0.15s;
   line-height: 1.5;
   cursor: pointer;
 }
@@ -760,10 +759,35 @@ body {
   text-decoration-color: var(--soft);
 }
 
+.checklist-body {
+  flex: 1;
+  min-width: 0;
+}
+.checklist-note {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  cursor: pointer;
+  margin-top: 2px;
+}
+.checklist-note.empty {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  color: var(--soft);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.checklist-item:hover .checklist-note.empty { opacity: 1; }
+.checklist-item.checked .checklist-note {
+  color: var(--soft);
+  text-decoration: line-through;
+  text-decoration-color: var(--soft);
+}
+
 .checklist-edit-input {
   font-family: inherit;
   font-size: 15px;
-  flex: 1;
+  width: 100%;
   border: none;
   border-bottom: 1px solid var(--text);
   background: transparent;
@@ -772,8 +796,24 @@ body {
   padding: 0 0 2px 0;
   line-height: 1.5;
   min-width: 0;
-  width: 100%;
 }
+.checklist-edit-note {
+  font-family: inherit;
+  font-size: 13px;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--line-strong);
+  background: transparent;
+  color: var(--text);
+  outline: none;
+  padding: 2px 0;
+  line-height: 1.5;
+  min-width: 0;
+  margin-top: 2px;
+  resize: none;
+  overflow: hidden;
+}
+.checklist-edit-note:focus { border-bottom-color: var(--text); }
 
 .item-delete {
   background: none;
@@ -784,6 +824,8 @@ body {
   padding: 0 6px;
   opacity: 0;
   transition: all 0.15s;
+  align-self: flex-start;
+  margin-top: -2px;
 }
 .checklist-item:hover .item-delete { opacity: 1; }
 .item-delete:hover { color: var(--danger); }
@@ -4920,7 +4962,10 @@ function renderChecklist(items) {
     <div class="checklist-item ${item.checked ? 'checked' : ''}" data-id="${escapeAttr(item.id)}">
       <div class="check-area">
         <div class="checkbox"></div>
-        <div class="checklist-text">${escapeHtml(item.text)}</div>
+        <div class="checklist-body">
+          <div class="checklist-text">${escapeHtml(item.text)}</div>
+          <div class="checklist-note ${item.note ? '' : 'empty'}">${item.note ? escapeHtml(item.note) : '메모 추가'}</div>
+        </div>
       </div>
       <button class="item-delete" title="삭제">×</button>
     </div>
@@ -4934,7 +4979,11 @@ function renderChecklist(items) {
     });
     el.querySelector('.checklist-text').addEventListener('click', e => {
       e.stopPropagation();
-      startChecklistEdit(el, id);
+      startChecklistEdit(el, id, 'text');
+    });
+    el.querySelector('.checklist-note').addEventListener('click', e => {
+      e.stopPropagation();
+      startChecklistEdit(el, id, 'note');
     });
     el.querySelector('.item-delete').addEventListener('click', async () => {
       if (!confirm('삭제할까요?')) return;
@@ -4970,49 +5019,70 @@ async function addCheckItem(text) {
   await saveChecklist(items);
 }
 
-function startChecklistEdit(itemEl, id) {
-  const textEl = itemEl.querySelector('.checklist-text');
-  if (itemEl.classList.contains('editing')) return;
-  itemEl.classList.add('editing');
+function startChecklistEdit(itemEl, id, field) {
+  field = field || 'text';
+  const targetEl = itemEl.querySelector(field === 'note' ? '.checklist-note' : '.checklist-text');
+  if (targetEl.dataset.editing) return;
+  targetEl.dataset.editing = '1';
 
   const items = cloneChecklist();
   const it = items.find(x => x.id === id);
   if (!it) return;
-  const oldText = it.text;
+  const oldVal = (field === 'note' ? it.note : it.text) || '';
 
-  const input = document.createElement('input');
-  input.type = 'text';
-  input.className = 'checklist-edit-input';
-  input.value = oldText;
-  textEl.replaceWith(input);
-  setTimeout(() => { input.focus(); input.select(); }, 10);
+  const input = document.createElement(field === 'note' ? 'textarea' : 'input');
+  if (field !== 'note') input.type = 'text';
+  input.className = field === 'note' ? 'checklist-edit-note' : 'checklist-edit-input';
+  input.value = oldVal;
+  if (field === 'note') {
+    input.rows = 1;
+    input.placeholder = '메모…';
+  }
+  targetEl.replaceWith(input);
+  setTimeout(() => {
+    input.focus();
+    if (field !== 'note') input.select();
+    if (field === 'note') { input.style.height = 'auto'; input.style.height = input.scrollHeight + 'px'; }
+  }, 10);
+
+  if (field === 'note') {
+    input.addEventListener('input', () => {
+      input.style.height = 'auto';
+      input.style.height = input.scrollHeight + 'px';
+    });
+  }
 
   let done = false;
   async function commit() {
     if (done) return;
     done = true;
-    const newText = input.value.trim();
-    if (newText && newText !== oldText) {
+    const newVal = input.value.trim();
+    if (newVal !== oldVal) {
       const items = cloneChecklist();
       const it = items.find(x => x.id === id);
       if (it) {
-        it.text = newText;
+        if (field === 'note') it.note = newVal;
+        else {
+          if (!newVal) { // 텍스트는 비우면 취소 (빈 항목 방지)
+            renderChecklist(currentTrip.data.checklist || []);
+            return;
+          }
+          it.text = newVal;
+        }
         await saveChecklist(items);
-        return; // render는 listener가 처리
+        return; // listener가 재렌더
       }
     }
-    itemEl.classList.remove('editing');
     renderChecklist(currentTrip.data.checklist || []);
   }
   function cancel() {
     if (done) return;
     done = true;
-    itemEl.classList.remove('editing');
     renderChecklist(currentTrip.data.checklist || []);
   }
   input.addEventListener('blur', commit);
   input.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); input.blur(); }
     if (e.key === 'Escape') { e.preventDefault(); cancel(); }
   });
 }
