@@ -564,6 +564,32 @@ body {
 }
 
 /* ====== Map Tab ====== */
+.weather-toggle {
+  display: inline-flex;
+  background: var(--rest-bg);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 2px;
+  gap: 2px;
+  margin-bottom: 12px;
+}
+.wx-tab {
+  background: none;
+  border: none;
+  padding: 5px 14px;
+  border-radius: 13px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.wx-tab.active {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+}
 .weather-strip {
   display: flex;
   gap: 8px;
@@ -583,6 +609,7 @@ body {
   background: var(--surface);
 }
 .weather-day.today { border-color: var(--text); }
+.weather-day.now { border-color: var(--accent); }
 .weather-dow {
   font-family: 'Fraunces', serif;
   font-style: italic;
@@ -598,6 +625,7 @@ body {
 }
 .weather-temp .hi { color: var(--text); }
 .weather-temp .lo { color: var(--soft); }
+.weather-temp .single { color: var(--text); }
 .weather-rain {
   font-size: 10px;
   color: #4a6577;
@@ -2257,7 +2285,13 @@ a.dir-item-arrow:hover { color: var(--text); }
         </div>
 
         <div class="sub-content active" data-sub="view">
-          <div class="weather-strip" id="weatherStrip" style="display:none"></div>
+          <div id="weatherWrap" style="display:none">
+            <div class="weather-toggle">
+              <button type="button" class="wx-tab active" data-wx="week">주간</button>
+              <button type="button" class="wx-tab" data-wx="hourly">시간별</button>
+            </div>
+            <div class="weather-strip" id="weatherStrip"></div>
+          </div>
           <div class="map-empty" id="mapEmpty" style="display:none">
             <p>아직 좌표가 있는 장소가 없어요.</p>
             <p class="muted">Plan 탭에서 이벤트에 구글맵 URL을 추가하면 핀이 표시돼요.</p>
@@ -5282,37 +5316,43 @@ function renderMapMarkers() {
 
 // ===== Weather (Open-Meteo) =====
 let weatherLoadedFor = null; // 중복 로드 방지 (좌표 키)
+let weatherData = null;      // { daily, hourly }
+let weatherMode = 'week';    // 'week' | 'hourly'
 
 async function loadWeatherForTrip(places) {
-  const strip = document.getElementById('weatherStrip');
-  if (!strip) return;
+  const wrap = document.getElementById('weatherWrap');
+  if (!wrap) return;
 
   // 대표 좌표: 호텔 우선, 없으면 첫 좌표
   let ref = (places || []).find(p => p.cat === 'hotel' && p.lat != null);
   if (!ref) ref = (places || []).find(p => p.lat != null);
-  if (!ref) { strip.style.display = 'none'; return; }
+  if (!ref) { wrap.style.display = 'none'; return; }
 
   const key = `${ref.lat.toFixed(2)},${ref.lng.toFixed(2)}`;
-  if (weatherLoadedFor === key && strip.children.length) {
-    strip.style.display = '';
-    return; // 이미 같은 위치 로드됨
+  if (weatherLoadedFor === key && weatherData) {
+    wrap.style.display = '';
+    renderWeather();
+    return;
   }
   weatherLoadedFor = key;
 
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${ref.lat}&longitude=${ref.lng}` +
-      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=7`;
+      `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max` +
+      `&hourly=weather_code,temperature_2m,precipitation_probability` +
+      `&timezone=auto&forecast_days=7`;
     const res = await fetch(url);
     if (!res.ok) throw new Error('weather fetch failed');
     const data = await res.json();
-    renderWeatherStrip(data.daily);
+    weatherData = { daily: data.daily, hourly: data.hourly };
+    wrap.style.display = '';
+    renderWeather();
   } catch (e) {
-    strip.style.display = 'none';
+    wrap.style.display = 'none';
   }
 }
 
 function weatherIcon(code) {
-  // WMO weather code → 이모지
   if (code === 0) return '☀️';
   if (code <= 2) return '🌤️';
   if (code === 3) return '☁️';
@@ -5326,9 +5366,19 @@ function weatherIcon(code) {
   return '🌡️';
 }
 
-function renderWeatherStrip(daily) {
+function renderWeather() {
+  if (weatherMode === 'hourly') renderWeatherHourly();
+  else renderWeatherWeek();
+  // 토글 활성 표시
+  document.querySelectorAll('.wx-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.wx === weatherMode);
+  });
+}
+
+function renderWeatherWeek() {
   const strip = document.getElementById('weatherStrip');
-  if (!strip || !daily || !daily.time) { if (strip) strip.style.display = 'none'; return; }
+  const daily = weatherData && weatherData.daily;
+  if (!strip || !daily || !daily.time) { if (strip) strip.innerHTML = ''; return; }
   const today = new Date().toISOString().split('T')[0];
   const dows = ['일','월','화','수','목','금','토'];
   let html = '';
@@ -5350,8 +5400,48 @@ function renderWeatherStrip(daily) {
     `;
   }
   strip.innerHTML = html;
-  strip.style.display = '';
 }
+
+function renderWeatherHourly() {
+  const strip = document.getElementById('weatherStrip');
+  const hourly = weatherData && weatherData.hourly;
+  if (!strip || !hourly || !hourly.time) { if (strip) strip.innerHTML = ''; return; }
+
+  // 현재 시각 이후 24시간만
+  const now = new Date();
+  let startIdx = 0;
+  for (let i = 0; i < hourly.time.length; i++) {
+    if (new Date(hourly.time[i]) >= now) { startIdx = Math.max(0, i - 1); break; }
+  }
+  const endIdx = Math.min(hourly.time.length, startIdx + 24);
+
+  let html = '';
+  for (let i = startIdx; i < endIdx; i++) {
+    const dt = new Date(hourly.time[i]);
+    const hour = dt.getHours();
+    const isNow = i === startIdx;
+    const temp = Math.round(hourly.temperature_2m[i]);
+    const rain = hourly.precipitation_probability ? hourly.precipitation_probability[i] : null;
+    const label = isNow ? '지금' : `${String(hour).padStart(2,'0')}시`;
+    html += `
+      <div class="weather-day ${isNow ? 'now' : ''}">
+        <div class="weather-dow">${label}</div>
+        <div class="weather-icon">${weatherIcon(hourly.weather_code[i])}</div>
+        <div class="weather-temp"><span class="single">${temp}°</span></div>
+        ${rain != null && rain >= 30 ? `<div class="weather-rain">☔ ${rain}%</div>` : ''}
+      </div>
+    `;
+  }
+  strip.innerHTML = html;
+}
+
+// 토글 핸들러 (한 번만 바인딩)
+document.querySelectorAll('.wx-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    weatherMode = tab.dataset.wx;
+    renderWeather();
+  });
+});
 
 function setupLocateButton() {
   const btn = document.getElementById('locateBtn');
@@ -5410,8 +5500,12 @@ function setupHotelButton() {
 function resetMapState() {
   lastMarkerCount = 0;
   weatherLoadedFor = null;
+  weatherData = null;
+  weatherMode = 'week';
+  const wrap = document.getElementById('weatherWrap');
+  if (wrap) wrap.style.display = 'none';
   const strip = document.getElementById('weatherStrip');
-  if (strip) { strip.style.display = 'none'; strip.innerHTML = ''; }
+  if (strip) strip.innerHTML = '';
   if (userLocMarker && leafletMap) {
     leafletMap.removeLayer(userLocMarker);
     userLocMarker = null;
