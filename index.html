@@ -1864,6 +1864,25 @@ a.dir-item-arrow:hover { color: var(--text); }
   font-variant-numeric: tabular-nums;
 }
 .migrate-row.empty .migrate-row-value { color: var(--soft); }
+
+.code-block {
+  background: var(--rest-bg);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+.code-block code {
+  display: block;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text);
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.msub-content { display: none; }
+.msub-content.active { display: block; }
 .modal-hint {
   font-family: 'Fraunces', serif;
   font-style: italic;
@@ -2363,14 +2382,46 @@ a.dir-item-arrow:hover { color: var(--text); }
       <h3 class="modal-title">방콕 앱 데이터 가져오기</h3>
       <button class="modal-close" id="migrateModalClose">×</button>
     </div>
-    <div id="migrate_preview" class="migrate-preview">—</div>
-    <label class="split-toggle on" id="migrateOverwrite" style="margin-top:14px">
-      <span class="mini-check"></span>
-      <span>기존 데이터에 덮어쓰기 (해제하면 합쳐짐)</span>
-    </label>
-    <div class="modal-hint" style="margin-top:12px">
-      방콕 앱의 원본 데이터는 그대로 유지돼요. 가져온 데이터는 이 여행에 저장됩니다.
+
+    <div class="sub-nav" data-parent="migrate" style="margin-bottom: 16px">
+      <button type="button" class="sub-nav-item active" data-msub="auto">자동 (같은 브라우저)</button>
+      <button type="button" class="sub-nav-item" data-msub="paste">JSON 붙여넣기</button>
     </div>
+
+    <div class="msub-content active" data-msub="auto">
+      <div id="migrate_preview" class="migrate-preview">—</div>
+      <label class="split-toggle on" id="migrateOverwrite" style="margin-top:14px">
+        <span class="mini-check"></span>
+        <span>기존 데이터에 덮어쓰기 (해제하면 합쳐짐)</span>
+      </label>
+      <div class="modal-hint" style="margin-top:12px">
+        방콕 앱의 원본 데이터는 그대로 유지돼요. 가져온 데이터는 이 여행에 저장됩니다.
+      </div>
+    </div>
+
+    <div class="msub-content" data-msub="paste">
+      <div class="modal-hint" style="margin-bottom:10px">
+        <strong>1단계.</strong> 방콕 앱을 열고 (다른 브라우저/기기여도 OK):<br>
+        <a href="https://helloimheeone.github.io/bk-2026-daisy/" target="_blank" rel="noopener" style="color:var(--accent)">https://helloimheeone.github.io/bk-2026-daisy/</a>
+      </div>
+      <div class="modal-hint" style="margin-bottom:10px">
+        <strong>2단계.</strong> 브라우저에서 <strong>F12</strong> (모바일은 어려움 → 데스크탑 권장) → <strong>Console</strong> 탭<br>
+        아래 한 줄을 붙여넣고 Enter:
+      </div>
+      <div class="code-block" id="exportCmdBox">
+        <code id="exportCmd"></code>
+        <button type="button" class="invite-action-btn secondary" id="copyExportCmd" style="margin-top:8px;width:100%">명령어 복사</button>
+      </div>
+      <div class="modal-hint" style="margin-top:10px;margin-bottom:6px">
+        <strong>3단계.</strong> 콘솔에 출력된 결과(긴 JSON 문자열)를 복사해서 아래에 붙여넣기:
+      </div>
+      <textarea class="modal-input modal-textarea" id="pasteJsonInput" rows="4" placeholder='{"plan":[...],"places":[...],...}'></textarea>
+      <label class="split-toggle on" id="migratePasteOverwrite" style="margin-top:14px">
+        <span class="mini-check"></span>
+        <span>기존 데이터에 덮어쓰기 (해제하면 합쳐짐)</span>
+      </label>
+    </div>
+
     <div class="modal-buttons">
       <button class="modal-save" id="migrateModalGo">가져오기</button>
       <button class="modal-cancel" id="migrateModalCancel">취소</button>
@@ -3371,20 +3422,28 @@ function renderMigrateArea() {
   const summary = bangkokDataSummary(bk);
   const total = summary.plan + summary.places + summary.checklist + summary.budget + summary.tips;
 
-  if (total === 0) {
-    // 방콕 데이터 없으면 섹션 숨김
-    sec.style.display = 'none';
-    return;
-  }
+  // 항상 보이게
   sec.style.display = '';
-  area.innerHTML = `
-    <div class="modal-hint" style="margin-bottom:8px">
-      방콕 앱(<code>bk-2026-daisy</code>)에 저장된 데이터가 발견됐어요.
-    </div>
-    <button type="button" class="migrate-cta" id="migrateOpenBtn">
-      ✨ 방콕 앱에서 가져오기 (이벤트 ${summary.plan} · 장소 ${summary.places} · 체크 ${summary.checklist} · 비용 ${summary.budget} · 노트 ${summary.tips})
-    </button>
-  `;
+
+  if (total > 0) {
+    area.innerHTML = `
+      <div class="modal-hint" style="margin-bottom:8px">
+        방콕 앱(<code>bk-2026-daisy</code>)에 저장된 데이터가 발견됐어요.
+      </div>
+      <button type="button" class="migrate-cta" id="migrateOpenBtn">
+        ✨ 방콕 앱에서 가져오기 (이벤트 ${summary.plan} · 장소 ${summary.places} · 체크 ${summary.checklist} · 비용 ${summary.budget} · 노트 ${summary.tips})
+      </button>
+    `;
+  } else {
+    area.innerHTML = `
+      <div class="modal-hint" style="margin-bottom:8px">
+        이 브라우저에는 방콕 앱 데이터가 없어요. 다른 브라우저/기기에서 사용했다면 JSON 붙여넣기로 가져올 수 있어요.
+      </div>
+      <button type="button" class="migrate-cta" id="migrateOpenBtn">
+        ✨ 방콕 앱에서 가져오기 (JSON 붙여넣기)
+      </button>
+    `;
+  }
   document.getElementById('migrateOpenBtn').addEventListener('click', openMigrateModal);
 }
 
@@ -3395,27 +3454,37 @@ function openMigrateModal() {
   if (!settingsTrip) return;
   const bk = readBangkokData();
   const summary = bangkokDataSummary(bk);
+  const hasAuto = (summary.plan + summary.places + summary.checklist + summary.budget + summary.tips) > 0;
 
-  // 미리보기
+  // 자동 탭 미리보기
   const preview = document.getElementById('migrate_preview');
-  const rows = [
-    { label: '날짜 (Day)', value: summary.days },
-    { label: '이벤트', value: summary.plan },
-    { label: '장소', value: summary.places },
-    { label: '체크리스트', value: summary.checklist },
-    { label: '비용', value: summary.budget },
-    { label: '노트', value: summary.tips },
-    { label: '인원', value: summary.people != null ? `${summary.people}명` : '—' },
-    { label: '환율 (THB)', value: summary.thbRate != null ? `${summary.thbRate}원` : '—' },
-  ];
-  preview.innerHTML = rows.map(r => `
-    <div class="migrate-row ${(typeof r.value === 'number' ? r.value === 0 : r.value === '—') ? 'empty' : ''}">
-      <span class="migrate-row-label">${r.label}</span>
-      <span class="migrate-row-value">${typeof r.value === 'number' ? r.value.toLocaleString('ko-KR') : r.value}</span>
-    </div>
-  `).join('');
+  if (!hasAuto) {
+    preview.innerHTML = `
+      <div style="text-align:center;padding:12px;font-family:'Fraunces',serif;font-style:italic;color:var(--soft);font-size:13px">
+        이 브라우저에는 방콕 앱 데이터가 없어요.<br>
+        오른쪽 "JSON 붙여넣기"를 사용하세요.
+      </div>
+    `;
+  } else {
+    const rows = [
+      { label: '날짜 (Day)', value: summary.days },
+      { label: '이벤트', value: summary.plan },
+      { label: '장소', value: summary.places },
+      { label: '체크리스트', value: summary.checklist },
+      { label: '비용', value: summary.budget },
+      { label: '노트', value: summary.tips },
+      { label: '인원', value: summary.people != null ? `${summary.people}명` : '—' },
+      { label: '환율 (THB)', value: summary.thbRate != null ? `${summary.thbRate}원` : '—' },
+    ];
+    preview.innerHTML = rows.map(r => `
+      <div class="migrate-row ${(typeof r.value === 'number' ? r.value === 0 : r.value === '—') ? 'empty' : ''}">
+        <span class="migrate-row-label">${r.label}</span>
+        <span class="migrate-row-value">${typeof r.value === 'number' ? r.value.toLocaleString('ko-KR') : r.value}</span>
+      </div>
+    `).join('');
+  }
 
-  // 기본: 덮어쓰기 체크됨, 단 현재 trip에 데이터가 있으면 덮어쓰기 해제
+  // 자동 탭 덮어쓰기 토글 기본값
   const hasExisting = currentTrip && currentTrip.data && (
     (currentTrip.data.plan || []).length ||
     (currentTrip.data.places || []).length ||
@@ -3424,11 +3493,36 @@ function openMigrateModal() {
     (currentTrip.data.tips || []).length
   );
   const overwriteToggle = document.getElementById('migrateOverwrite');
-  if (hasExisting) overwriteToggle.classList.remove('on');
-  else overwriteToggle.classList.add('on');
+  const pasteOverwriteToggle = document.getElementById('migratePasteOverwrite');
+  if (hasExisting) {
+    overwriteToggle.classList.remove('on');
+    pasteOverwriteToggle.classList.remove('on');
+  } else {
+    overwriteToggle.classList.add('on');
+    pasteOverwriteToggle.classList.add('on');
+  }
+
+  // Export 명령어 채우기
+  const cmd = `copy(JSON.stringify({plan:JSON.parse(localStorage.getItem('bk-plan-v2')||'[]'),places:JSON.parse(localStorage.getItem('bk-places-v3')||'[]'),checklist:JSON.parse(localStorage.getItem('bk-checklist-v2')||'[]'),budget:JSON.parse(localStorage.getItem('bk-budget-v1')||'[]'),tips:JSON.parse(localStorage.getItem('bk-tips-v1')||'[]'),people:Number(localStorage.getItem('bk-people-v1'))||null,thbRate:Number(localStorage.getItem('bk-thb-rate'))||null}))`;
+  document.getElementById('exportCmd').textContent = cmd;
+
+  // 시작 sub-tab: 자동 데이터가 있으면 auto, 없으면 paste
+  setActiveMigrateSub(hasAuto ? 'auto' : 'paste');
+
+  // paste textarea 비우기
+  document.getElementById('pasteJsonInput').value = '';
 
   migrateModal.classList.add('open');
   document.body.style.overflow = 'hidden';
+}
+
+function setActiveMigrateSub(sub) {
+  migrateModal.querySelectorAll('.sub-nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.msub === sub);
+  });
+  migrateModal.querySelectorAll('.msub-content').forEach(el => {
+    el.classList.toggle('active', el.dataset.msub === sub);
+  });
 }
 
 function closeMigrateModal() {
@@ -3438,8 +3532,24 @@ function closeMigrateModal() {
 
 async function doMigrate() {
   if (!settingsTrip) return;
-  const bk = readBangkokData();
-  const overwrite = document.getElementById('migrateOverwrite').classList.contains('on');
+  // 현재 어느 sub-tab 활성?
+  const activeSub = migrateModal.querySelector('.sub-nav-item.active')?.dataset.msub || 'auto';
+  let bk;
+  let overwrite;
+  if (activeSub === 'paste') {
+    const raw = document.getElementById('pasteJsonInput').value.trim();
+    if (!raw) { alert('JSON을 붙여넣어주세요'); return; }
+    try {
+      bk = JSON.parse(raw);
+    } catch (e) {
+      alert('JSON 형식이 잘못됐어요.\n방콕 앱 콘솔의 출력을 정확히 복사했는지 확인해주세요.\n\n에러: ' + e.message);
+      return;
+    }
+    overwrite = document.getElementById('migratePasteOverwrite').classList.contains('on');
+  } else {
+    bk = readBangkokData();
+    overwrite = document.getElementById('migrateOverwrite').classList.contains('on');
+  }
 
   // 현재 데이터 시작점
   const cur = currentTrip && currentTrip.data ? currentTrip.data : {};
@@ -3567,6 +3677,25 @@ document.getElementById('migrateModalCancel').addEventListener('click', closeMig
 document.getElementById('migrateModalGo').addEventListener('click', doMigrate);
 document.getElementById('migrateOverwrite').addEventListener('click', () => {
   document.getElementById('migrateOverwrite').classList.toggle('on');
+});
+document.getElementById('migratePasteOverwrite').addEventListener('click', () => {
+  document.getElementById('migratePasteOverwrite').classList.toggle('on');
+});
+migrateModal.querySelectorAll('.sub-nav-item').forEach(btn => {
+  btn.addEventListener('click', () => setActiveMigrateSub(btn.dataset.msub));
+});
+document.getElementById('copyExportCmd').addEventListener('click', () => {
+  const txt = document.getElementById('exportCmd').textContent;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(() => showToast('명령어가 복사됐어요'));
+    } else {
+      const ta = document.createElement('textarea');
+      ta.value = txt; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+      showToast('명령어가 복사됐어요');
+    }
+  } catch { showToast('수동으로 복사해주세요'); }
 });
 migrateModal.addEventListener('click', e => { if (e.target === migrateModal) closeMigrateModal(); });
 
