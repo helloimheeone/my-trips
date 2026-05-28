@@ -924,6 +924,82 @@ body {
   padding-bottom: 16px;
   border-bottom: 1px solid var(--line);
 }
+
+/* ====== FX Calculator ====== */
+.fx-calc {
+  margin-top: 16px;
+  padding: 14px;
+  background: var(--rest-bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.fx-calc-title {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.fx-calc-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fx-field {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  padding: 8px 10px;
+  min-width: 0;
+}
+.fx-field input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  min-width: 0;
+  width: 100%;
+}
+.fx-field input::-webkit-outer-spin-button,
+.fx-field input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.fx-field input[type=number] { -moz-appearance: textfield; }
+.fx-unit {
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.fx-swap {
+  color: var(--soft);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+.fx-quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.fx-quick-btn {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.fx-quick-btn:hover { border-color: var(--text); color: var(--text); }
+
 .config-row {
   display: flex;
   align-items: center;
@@ -2339,6 +2415,22 @@ a.dir-item-arrow:hover { color: var(--text); }
             </div>
           </div>
           <div class="rate-meta" id="rateMeta"></div>
+
+          <div class="fx-calc">
+            <div class="fx-calc-title">환전 계산기</div>
+            <div class="fx-calc-row">
+              <div class="fx-field">
+                <input type="number" id="fxLocal" placeholder="0" inputmode="decimal">
+                <span class="fx-unit" id="fxLocalUnit">฿</span>
+              </div>
+              <span class="fx-swap">⇄</span>
+              <div class="fx-field">
+                <input type="number" id="fxKrw" placeholder="0" inputmode="decimal">
+                <span class="fx-unit">₩</span>
+              </div>
+            </div>
+            <div class="fx-quick" id="fxQuick"></div>
+          </div>
         </div>
 
         <div class="budget-form">
@@ -2432,6 +2524,13 @@ a.dir-item-arrow:hover { color: var(--text); }
     <div class="modal-header">
       <h3 class="modal-title" id="eventModalTitle">이벤트 편집</h3>
       <button class="modal-close" id="eventModalClose">×</button>
+    </div>
+    <div class="modal-field" id="ev_pickField">
+      <label class="modal-label" for="ev_pick">내 장소에서 가져오기</label>
+      <select class="modal-input" id="ev_pick">
+        <option value="">— 직접 입력 —</option>
+      </select>
+      <div class="modal-hint" style="margin-top:4px">"장소" 탭에 등록한 곳을 고르면 정보가 자동 입력돼요.</div>
     </div>
     <div class="modal-field">
       <label class="modal-label" for="ev_time">시간</label>
@@ -4452,9 +4551,11 @@ function renderPlacesDirectory() {
 
   // in-plan: PLAN의 url 또는 좌표 있는 이벤트
   const planned = [];
+  const linkedPlaceIds = new Set(); // 플랜 이벤트에 연결된 장소 id
   if (currentTrip && currentTrip.data && currentTrip.data.plan) {
     currentTrip.data.plan.forEach((day, dayIdx) => {
       (day.events || []).forEach(ev => {
+        if (ev.placeId) linkedPlaceIds.add(ev.placeId);
         if (!ev.url && (ev.lat == null || ev.lng == null)) return;
         planned.push({
           ...ev,
@@ -4465,7 +4566,9 @@ function renderPlacesDirectory() {
     });
   }
 
-  const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
+  // other places: 플랜에 연결되지 않은 장소만
+  const allPlaces = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
+  const places = allPlaces.filter(p => !linkedPlaceIds.has(p.id));
 
   // 존재하는 카테고리 수집 (필터 칩용)
   const presentCats = new Set();
@@ -4809,6 +4912,9 @@ function renderBudget(budget) {
   const localBtn = document.querySelector('#currencyToggle [data-cur="LOCAL"]');
   if (localBtn) localBtn.textContent = settings.currencySymbol;
 
+  // 환전 계산기 갱신
+  updateFxCalc();
+
   // 리스트
   const list = document.getElementById('budgetList');
   if (items.length === 0) {
@@ -4969,17 +5075,82 @@ async function fetchRate() {
   btn.classList.remove('loading');
 
   if (rate != null) {
+    // 소수점 4자리로 정리 (너무 긴 소수 방지)
+    rate = Math.round(rate * 10000) / 10000;
+    // 입력칸에 즉시 반영 (저장 성공 여부와 무관하게 사용자가 바로 봄)
+    const rateInput = document.getElementById('exchangeRate');
+    if (rateInput) rateInput.value = rate;
     try {
       await updateTripData({ 'data.settings.exchangeRate': rate });
       const stamp = new Date().toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       meta.textContent = `자동 업데이트 (${source}) · ${stamp}`;
     } catch (e) {
-      meta.textContent = '환율은 받았지만 저장 실패: ' + e.message;
+      console.error('[fetchRate] 저장 실패', e);
+      // 저장 실패해도 입력칸엔 반영됐으니, 직접 저장 유도
+      meta.textContent = `환율 ${rate}원 받음 — 입력칸에 넣었어요. 저장하려면 입력칸 클릭 후 Enter (${e.code || e.message})`;
     }
   } else {
     meta.textContent = `${code} 환율 가져오기 실패 — 수동 입력하세요${lastError ? ' (' + lastError + ')' : ''}`;
   }
 }
+
+// ===== FX Calculator =====
+let fxLastEdited = 'local'; // 마지막으로 사용자가 입력한 쪽
+
+function updateFxCalc() {
+  const { currencySymbol } = getBudgetSettings();
+  const unitEl = document.getElementById('fxLocalUnit');
+  if (unitEl) unitEl.textContent = currencySymbol;
+
+  // 빠른 금액 버튼 (현지 통화 기준)
+  const quick = document.getElementById('fxQuick');
+  if (quick && !quick.dataset.built) quick.dataset.built = '1';
+  if (quick) {
+    const presets = [100, 500, 1000, 5000];
+    quick.innerHTML = presets.map(v =>
+      `<button type="button" class="fx-quick-btn" data-val="${v}">${currencySymbol}${v.toLocaleString('ko-KR')}</button>`
+    ).join('');
+    quick.querySelectorAll('.fx-quick-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        document.getElementById('fxLocal').value = b.dataset.val;
+        fxLastEdited = 'local';
+        recalcFx();
+      });
+    });
+  }
+  // 환율 바뀌면 마지막 입력 기준으로 재계산
+  recalcFx();
+}
+
+function recalcFx() {
+  const { rate } = getBudgetSettings();
+  const localEl = document.getElementById('fxLocal');
+  const krwEl = document.getElementById('fxKrw');
+  if (!localEl || !krwEl || !rate) return;
+
+  if (fxLastEdited === 'local') {
+    const v = parseFloat(localEl.value);
+    if (localEl.value === '' || isNaN(v)) { krwEl.value = ''; return; }
+    krwEl.value = Math.round(v * rate); // 콤마 없이 (재입력 충돌 방지)
+  } else {
+    const raw = parseFloat(krwEl.value);
+    if (krwEl.value === '' || isNaN(raw)) { localEl.value = ''; return; }
+    const local = raw / rate;
+    localEl.value = local < 100 ? Math.round(local * 100) / 100 : Math.round(local);
+  }
+}
+
+(function bindFxCalc() {
+  const localEl = document.getElementById('fxLocal');
+  const krwEl = document.getElementById('fxKrw');
+  if (!localEl || !krwEl) return;
+  localEl.addEventListener('input', () => { fxLastEdited = 'local'; recalcFx(); });
+  krwEl.addEventListener('input', () => {
+    fxLastEdited = 'krw';
+    // 입력 중 천단위 콤마는 계산에만 쓰고 표시는 그대로 두기 (커서 튐 방지)
+    recalcFx();
+  });
+})();
 
 // Currency toggle (입력 통화)
 document.querySelectorAll('#currencyToggle .cur-btn').forEach(btn => {
@@ -5747,31 +5918,69 @@ const eventModal = document.getElementById('eventModal');
 
 function openEventModal(dayIdx, eventId) {
   const plan = clonePlan();
+  // 장소 드롭다운 채우기
+  fillEventPlacePicker();
   if (eventId) {
     const ev = (plan[dayIdx]?.events || []).find(e => e.id === eventId);
     if (!ev) return;
-    eventModalCtx = { mode: 'edit', dayIdx, eventId };
+    eventModalCtx = { mode: 'edit', dayIdx, eventId, placeId: ev.placeId || null };
     document.getElementById('eventModalTitle').textContent = '이벤트 편집';
     document.getElementById('ev_time').value = ev.time || '';
     document.getElementById('ev_name').value = ev.name || '';
     document.getElementById('ev_note').value = ev.note || '';
     document.getElementById('ev_url').value = ev.url || '';
     document.getElementById('ev_cat').value = ev.cat || '';
+    document.getElementById('ev_pick').value = ev.placeId || '';
     document.getElementById('eventModalDelete').style.display = '';
   } else {
-    eventModalCtx = { mode: 'add', dayIdx, eventId: null };
+    eventModalCtx = { mode: 'add', dayIdx, eventId: null, placeId: null };
     document.getElementById('eventModalTitle').textContent = '새 이벤트';
     document.getElementById('ev_time').value = '';
     document.getElementById('ev_name').value = '';
     document.getElementById('ev_note').value = '';
     document.getElementById('ev_url').value = '';
     document.getElementById('ev_cat').value = '';
+    document.getElementById('ev_pick').value = '';
     document.getElementById('eventModalDelete').style.display = 'none';
   }
   eventModal.classList.add('open');
   document.body.style.overflow = 'hidden';
   setTimeout(() => document.getElementById('ev_name').focus(), 80);
 }
+
+// 이벤트 모달의 '내 장소에서 가져오기' 드롭다운 채우기
+function fillEventPlacePicker() {
+  const sel = document.getElementById('ev_pick');
+  const field = document.getElementById('ev_pickField');
+  if (!sel) return;
+  const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
+  if (places.length === 0) {
+    // 등록된 장소 없으면 드롭다운 숨김
+    if (field) field.style.display = 'none';
+    sel.innerHTML = '<option value="">— 직접 입력 —</option>';
+    return;
+  }
+  if (field) field.style.display = '';
+  sel.innerHTML = '<option value="">— 직접 입력 —</option>' +
+    places.map(p => {
+      const catLabel = p.cat && CATEGORIES[p.cat] ? `[${CATEGORIES[p.cat].label}] ` : '';
+      return `<option value="${escapeAttr(p.id)}">${escapeHtml(catLabel + (p.name || ''))}</option>`;
+    }).join('');
+}
+
+// 드롭다운에서 장소 선택 시 필드 자동 채움
+document.getElementById('ev_pick').addEventListener('change', e => {
+  const placeId = e.target.value;
+  if (!placeId) { eventModalCtx.placeId = null; return; }
+  const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
+  const p = places.find(x => x.id === placeId);
+  if (!p) return;
+  eventModalCtx.placeId = placeId;
+  document.getElementById('ev_name').value = p.name || '';
+  if (p.note) document.getElementById('ev_note').value = p.note;
+  document.getElementById('ev_url').value = p.url || '';
+  document.getElementById('ev_cat').value = p.cat || '';
+});
 function closeEventModal() {
   eventModal.classList.remove('open');
   document.body.style.overflow = '';
@@ -5792,7 +6001,14 @@ async function saveEventFromModal() {
     url,
     cat: document.getElementById('ev_cat').value,
     lat, lng,
+    placeId: eventModalCtx.placeId || null,
   };
+  // 연결된 장소가 있으면 그 장소의 좌표를 우선 사용 (URL로 좌표 못 뽑았을 때)
+  if (data.placeId && data.lat == null) {
+    const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
+    const linked = places.find(x => x.id === data.placeId);
+    if (linked && linked.lat != null) { data.lat = linked.lat; data.lng = linked.lng; }
+  }
   const plan = clonePlan();
   if (!plan[eventModalCtx.dayIdx]) return;
   if (eventModalCtx.mode === 'edit') {
