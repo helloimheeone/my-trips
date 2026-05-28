@@ -5808,12 +5808,42 @@ async function saveEventFromModal() {
     if (!plan[eventModalCtx.dayIdx].events) plan[eventModalCtx.dayIdx].events = [];
     plan[eventModalCtx.dayIdx].events.push({ id: 'e' + Date.now(), ...data });
   }
+  // 시간순 자동 정렬 (시간 있는 것끼리만; 시간 없는 건 제자리 유지)
+  sortEventsByTime(plan[eventModalCtx.dayIdx].events);
   try {
     await savePlan(plan);
     closeEventModal();
   } catch (e) {
     alert('저장 실패: ' + e.message);
   }
+}
+
+// 시간(HH:MM)이 있는 이벤트만 시간순으로 정렬.
+// 시간이 없거나 형식이 다른 이벤트(PM, 오전 등)는 원래 자리 유지.
+function timeToMinutes(t) {
+  if (!t) return null;
+  const m = String(t).trim().match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = parseInt(m[1], 10), min = parseInt(m[2], 10);
+  if (h > 23 || min > 59) return null;
+  return h * 60 + min;
+}
+function sortEventsByTime(events) {
+  if (!Array.isArray(events) || events.length < 2) return;
+  // 원래 인덱스 기록 (안정 정렬용)
+  const withIdx = events.map((ev, i) => ({ ev, i, mins: timeToMinutes(ev.time) }));
+  // 시간 있는 항목들의 "위치 슬롯"만 추출해서 그 자리에 정렬된 시간 항목을 배치.
+  // 시간 없는 항목은 자기 자리에 그대로 둠.
+  const timedSlots = []; // 시간 있는 항목이 차지한 인덱스들
+  withIdx.forEach((x, pos) => { if (x.mins != null) timedSlots.push(pos); });
+  if (timedSlots.length < 2) return; // 정렬할 게 없음
+  const timedSorted = withIdx.filter(x => x.mins != null)
+    .sort((a, b) => a.mins - b.mins || a.i - b.i);
+  // 슬롯에 순서대로 채우기
+  const result = withIdx.slice();
+  timedSlots.forEach((slotPos, k) => { result[slotPos] = timedSorted[k]; });
+  // events 배열을 제자리 갱신
+  for (let i = 0; i < events.length; i++) events[i] = result[i].ev;
 }
 async function deleteEventFromModal() {
   if (eventModalCtx.mode !== 'edit') return;
