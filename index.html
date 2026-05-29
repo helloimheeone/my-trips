@@ -5985,13 +5985,12 @@ function fillEventPlacePicker() {
     });
   }
 
+  if (field) field.style.display = ''; // 항상 보이게
+
   if (places.length === 0) {
-    // 등록된 장소 없으면 드롭다운 숨김
-    if (field) field.style.display = 'none';
-    sel.innerHTML = '<option value="">— 직접 입력 —</option>';
+    sel.innerHTML = '<option value="">— 등록된 장소 없음 (장소 탭에서 추가) —</option>';
     return;
   }
-  if (field) field.style.display = '';
   sel.innerHTML = '<option value="">— 직접 입력 —</option>' +
     places.map(p => {
       const catLabel = p.cat && CATEGORIES[p.cat] ? `[${CATEGORIES[p.cat].label}] ` : '';
