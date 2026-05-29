@@ -3168,6 +3168,28 @@ let currentRoute = null;
 let currentTripUnsub = null;
 let currentTripId = null;
 let currentTrip = null;
+
+// 디버그: 콘솔에서 권한 상태 확인
+window.debugTrip = function() {
+  if (!currentUser) return '로그인 안 됨';
+  if (!currentTrip) return '여행이 열려있지 않음';
+  const myUid = currentUser.uid;
+  const owner = currentTrip.ownerId;
+  const members = currentTrip.memberIds || [];
+  const result = {
+    내_uid: myUid,
+    내_이메일: currentUser.email,
+    여행_제목: currentTrip.title,
+    여행_id: currentTrip.id,
+    owner_uid: owner,
+    내가_owner인가: myUid === owner,
+    memberIds: members,
+    내가_member인가: members.includes(myUid),
+    inviteToken: currentTrip.inviteToken,
+  };
+  console.log('=== TRIP DEBUG ===', result);
+  return result;
+};
 let activeTripTab = 'map';
 
 function parseRoute() {
@@ -5954,6 +5976,15 @@ function fillEventPlacePicker() {
   const field = document.getElementById('ev_pickField');
   if (!sel) return;
   const places = (currentTrip && currentTrip.data && currentTrip.data.places) || [];
+
+  // 이미 플랜에 연결된 장소 id 수집 (라벨 표시용)
+  const linkedIds = new Set();
+  if (currentTrip && currentTrip.data && currentTrip.data.plan) {
+    currentTrip.data.plan.forEach(day => {
+      (day.events || []).forEach(ev => { if (ev.placeId) linkedIds.add(ev.placeId); });
+    });
+  }
+
   if (places.length === 0) {
     // 등록된 장소 없으면 드롭다운 숨김
     if (field) field.style.display = 'none';
@@ -5964,7 +5995,8 @@ function fillEventPlacePicker() {
   sel.innerHTML = '<option value="">— 직접 입력 —</option>' +
     places.map(p => {
       const catLabel = p.cat && CATEGORIES[p.cat] ? `[${CATEGORIES[p.cat].label}] ` : '';
-      return `<option value="${escapeAttr(p.id)}">${escapeHtml(catLabel + (p.name || ''))}</option>`;
+      const linkedMark = linkedIds.has(p.id) ? ' · 이미 연결됨' : '';
+      return `<option value="${escapeAttr(p.id)}">${escapeHtml(catLabel + (p.name || '') + linkedMark)}</option>`;
     }).join('');
 }
 
